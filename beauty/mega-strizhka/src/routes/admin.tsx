@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
+import { Eye, EyeOff, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Shell } from "@/components/shell";
 import {
@@ -212,7 +213,7 @@ function AdminPage() {
                           {statusLabel[status]}
                         </button>
                       ))}
-                      <ConfirmDelete name="заявку" onYes={() => removeCard("booking", b.id)} />
+                      <RowActions onDelete={() => removeCard("booking", b.id)} />
                     </div>
                   </li>
                 ))}
@@ -246,14 +247,15 @@ function AdminPage() {
                       {r.author} · {r.stars}/5 · {r.status === "pending" ? "на модерации" : r.status === "published" ? "на сайте" : "скрыт"}
                     </p>
                     <p className="mt-1 text-sm leading-6">{r.text}</p>
-                    <div className="mt-3 flex flex-wrap gap-2">
+                    <div className="mt-3 flex items-center justify-between gap-2">
                       <button className="min-h-11 rounded-full bg-copper px-3 text-sm font-semibold text-ink" onClick={() => setGuestReviewStatus(r.id, "published")}>
                         Опубликовать
                       </button>
-                      <button className="min-h-11 rounded-full border border-line px-3 text-sm" onClick={() => setGuestReviewStatus(r.id, "hidden")}>
-                        Скрыть
-                      </button>
-                      <ConfirmDelete name="отзыв" onYes={() => removeCard("guest", r.id)} />
+                      <RowActions
+                        hidden={r.status === "hidden"}
+                        onHide={() => setGuestReviewStatus(r.id, r.status === "hidden" ? "pending" : "hidden")}
+                        onDelete={() => removeCard("guest", r.id)}
+                      />
                     </div>
                   </li>
                 ))}
@@ -266,10 +268,7 @@ function AdminPage() {
                     <li key={r.id} className="grid gap-2 rounded-2xl border border-line px-3 py-3">
                       <input className={fieldClass} defaultValue={r.author} key={`${r.id}-author-${r.author}`} onBlur={(e) => editMap("reviewEdits", r.id, { author: e.target.value })} />
                       <textarea className={`${fieldClass} min-h-20 py-3`} defaultValue={r.text} key={`${r.id}-text-${r.text}`} onBlur={(e) => editMap("reviewEdits", r.id, { text: e.target.value })} />
-                      <button className="min-h-11 self-start text-sm font-semibold text-copper-deep" onClick={() => toggleHiddenReview(r.id)}>
-                        {hidden ? "Вернуть" : "Скрыть"}
-                      </button>
-                      <ConfirmDelete name="отзыв" onYes={() => removeCard("review", r.id)} />
+                      <RowActions hidden={hidden} onHide={() => toggleHiddenReview(r.id)} onDelete={() => removeCard("review", r.id)} />
                     </li>
                   );
                 })}
@@ -312,14 +311,11 @@ function AdminPage() {
                         <input className={fieldClass} defaultValue={String(b.marks)} key={`${b.id}-marks`} onBlur={(e) => save({ marks: Number(e.target.value) || 0 })} aria-label="Число оценок" />
                       </div>
                       <input className={fieldClass} defaultValue={b.map} key={`${b.id}-map`} onBlur={(e) => save({ map: e.target.value })} aria-label="Ссылка на карту" />
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex items-center justify-between gap-2">
                         <button className={cn("min-h-11 rounded-full px-4 text-sm font-semibold", open ? "bg-copper text-ink" : "bg-sand")} onClick={() => toggleBranch(b.id)}>
                           {open ? "Запись открыта" : "Запись закрыта"}
                         </button>
-                        <button className="min-h-11 rounded-full bg-sand px-4 text-sm font-semibold" onClick={() => toggleBranchHidden(b.id)}>
-                          {hidden ? "Скрыт с сайта" : "На сайте"}
-                        </button>
-                        <ConfirmDelete name={b.title} onYes={() => removeCard("branch", b.id)} />
+                        <RowActions hidden={hidden} onHide={() => toggleBranchHidden(b.id)} onDelete={() => removeCard("branch", b.id)} />
                       </div>
                     </li>
                   );
@@ -362,16 +358,13 @@ function AdminPage() {
                           aria-label="Цена"
                         />
                       </div>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         {(Object.keys(categoryMeta) as PriceCategory[]).map((cat) => (
                           <button key={cat} className={cn("min-h-11 rounded-full px-3 text-sm", item.category === cat ? "bg-copper text-ink" : "bg-sand")} onClick={() => save({ category: cat })}>
                             {categoryMeta[cat].label}
                           </button>
                         ))}
-                        <button className="min-h-11 text-sm font-semibold text-copper-deep" onClick={() => togglePrice(item.id)}>
-                          {hidden ? "Показать" : "Скрыть"}
-                        </button>
-                        <ConfirmDelete name={item.name} onYes={() => removeCard("price", item.id)} />
+                        <RowActions hidden={hidden} onHide={() => togglePrice(item.id)} onDelete={() => removeCard("price", item.id)} />
                       </div>
                     </li>
                   );
@@ -392,15 +385,9 @@ function AdminPage() {
                   };
                   return (
                   <li key={p.id} className="rounded-3xl border border-line p-4">
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="flex items-center gap-2">
                       <input className={fieldClass} defaultValue={p.title} key={`${p.id}-title`} onBlur={(e) => save({ title: e.target.value })} aria-label="Название акции" />
-                      <button
-                        className={cn("min-h-11 shrink-0 self-start rounded-full px-3 text-sm", promosOn[p.id] !== false ? "bg-copper text-ink" : "bg-sand")}
-                        onClick={() => togglePromo(p.id)}
-                      >
-                        {promosOn[p.id] !== false ? "На сайте" : "Скрыта"}
-                      </button>
-                      <ConfirmDelete name={p.title} onYes={() => removeCard("promo", p.id)} />
+                      <RowActions hidden={promosOn[p.id] === false} onHide={() => togglePromo(p.id)} onDelete={() => removeCard("promo", p.id)} />
                     </div>
                     <textarea className={`${fieldClass} mt-2 min-h-20 py-3`} defaultValue={p.text} key={`${p.id}-text`} onBlur={(e) => save({ text: e.target.value })} aria-label="Текст акции" />
                   </li>
@@ -476,15 +463,7 @@ function AdminPage() {
                       <p className="text-sm text-muted">
                         {m.branches.map((id) => branchList.find((b) => b.id === id)?.address).filter(Boolean).join(" · ")}
                       </p>
-                      <div className="flex flex-wrap gap-2">
-                        <button
-                          className={cn("min-h-11 self-start rounded-full px-3 text-sm", hidden ? "bg-sand" : "bg-copper text-ink")}
-                          onClick={() => toggleMaster(m.id)}
-                        >
-                          {hidden ? "Скрыт" : "На сайте"}
-                        </button>
-                        <ConfirmDelete name={m.name} onYes={() => removeCard("master", m.id)} />
-                      </div>
+                      <RowActions hidden={hidden} onHide={() => toggleMaster(m.id)} onDelete={() => removeCard("master", m.id)} />
                     </li>
                   );
                 })}
@@ -514,10 +493,7 @@ function AdminPage() {
                     <li key={item.id} className="grid gap-2 rounded-3xl border border-line p-4">
                       <input className={fieldClass} defaultValue={item.q} key={`${item.id}-q`} onBlur={(e) => save({ q: e.target.value })} aria-label="Вопрос" />
                       <textarea className={`${fieldClass} min-h-20 py-3`} defaultValue={item.a} key={`${item.id}-a`} onBlur={(e) => save({ a: e.target.value })} aria-label="Ответ" />
-                      <button className="min-h-11 self-start text-sm font-semibold text-copper-deep" onClick={() => toggleFaq(item.id)}>
-                        {hidden ? "Скрыт" : "На сайте"}
-                      </button>
-                      <ConfirmDelete name="вопрос" onYes={() => removeCard("faq", item.id)} />
+                      <RowActions hidden={hidden} onHide={() => toggleFaq(item.id)} onDelete={() => removeCard("faq", item.id)} />
                     </li>
                   );
                 })}
@@ -577,25 +553,48 @@ function Stat({ n, label }: { n: string; label: string }) {
   );
 }
 
-function ConfirmDelete({ name, onYes }: { name: string; onYes: () => void }) {
+function RowActions({
+  hidden,
+  onHide,
+  onDelete,
+}: {
+  hidden?: boolean;
+  onHide?: () => void;
+  onDelete: () => void;
+}) {
   const [ask, setAsk] = useState(false);
-  if (!ask) {
-    return (
-      <button type="button" className="min-h-11 rounded-full px-3 text-sm font-semibold text-copper-deep" onClick={() => setAsk(true)}>
-        Удалить
-      </button>
-    );
-  }
   return (
-    <span className="flex flex-wrap items-center gap-2">
-      <span className="text-sm">Удалить {name}?</span>
-      <button type="button" className="min-h-11 rounded-full bg-ink px-3 text-sm font-semibold text-surface" onClick={onYes}>
-        Да, удалить
-      </button>
-      <button type="button" className="min-h-11 rounded-full bg-sand px-3 text-sm" onClick={() => setAsk(false)}>
-        Оставить
-      </button>
-    </span>
+    <div className="ml-auto flex shrink-0 items-center justify-end gap-1">
+      {onHide && (
+        <button
+          type="button"
+          className={cn("inline-flex size-11 items-center justify-center rounded-full", hidden ? "bg-sand text-ink" : "text-muted")}
+          aria-label={hidden ? "Показать" : "Скрыть"}
+          onClick={onHide}
+        >
+          {hidden ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+        </button>
+      )}
+      {ask ? (
+        <>
+          <button type="button" className="min-h-11 rounded-full bg-ink px-3 text-sm font-semibold text-surface" onClick={onDelete}>
+            Да
+          </button>
+          <button type="button" className="min-h-11 rounded-full px-3 text-sm" onClick={() => setAsk(false)}>
+            Нет
+          </button>
+        </>
+      ) : (
+        <button
+          type="button"
+          className="inline-flex size-11 items-center justify-center rounded-full text-muted"
+          aria-label="Удалить"
+          onClick={() => setAsk(true)}
+        >
+          <Trash2 className="size-4" />
+        </button>
+      )}
+    </div>
   );
 }
 
