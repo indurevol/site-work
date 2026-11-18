@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 import { Menu, Phone, X } from "lucide-react";
 import { links } from "@/data/salon";
 import { useSalon } from "@/lib/salon-store";
@@ -15,13 +15,15 @@ export function Shell({ children }: { children: ReactNode }) {
   const contacts = siteContacts(siteInfo);
   const [open, setOpen] = useState(false);
   const [bar, setBar] = useState(true);
+  const path = useRouterState({ select: (s) => s.location.pathname });
+  const onAdmin = path.includes("/admin");
 
   useEffect(() => {
     hydrate();
   }, [hydrate]);
 
   return (
-    <div className="min-h-screen">
+    <div className={cn("min-h-screen", !onAdmin && "pb-24 md:pb-0")}>
       <header className="site-header sticky top-0 z-40 flex flex-col overflow-hidden border-b border-line/80 bg-paper">
         {bar && (
           <div className="shrink-0 bg-ink text-surface">
@@ -65,7 +67,7 @@ export function Shell({ children }: { children: ReactNode }) {
               <Phone className="size-4 text-copper" />
               {contacts.phone}
             </a>
-            <Button className="hidden sm:inline-flex" onClick={() => openBooking()}>
+            <Button className="cta-pop hidden min-h-12 px-6 text-base sm:inline-flex" onClick={() => openBooking()}>
               Записаться
             </Button>
             <Link
@@ -105,7 +107,7 @@ export function Shell({ children }: { children: ReactNode }) {
               {contacts.phone}
             </a>
             <Button
-              className="w-full"
+              className="cta-pop w-full min-h-12 text-base"
               onClick={() => {
                 setOpen(false);
                 openBooking();
@@ -142,6 +144,22 @@ export function Shell({ children }: { children: ReactNode }) {
           </p>
         </div>
       </footer>
+      {!onAdmin && (
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-paper/95 p-3 backdrop-blur md:hidden" style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}>
+          <div className="mx-auto flex max-w-lg gap-2">
+            <a
+              href={`tel:${contacts.phoneTel}`}
+              className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-full border border-line bg-surface px-3 text-sm font-semibold"
+            >
+              <Phone className="size-4 text-copper" />
+              Позвонить
+            </a>
+            <Button className="cta-pop min-h-12 flex-[1.4] text-base" onClick={() => openBooking()}>
+              Записаться
+            </Button>
+          </div>
+        </div>
+      )}
       <BookingDialog />
     </div>
   );

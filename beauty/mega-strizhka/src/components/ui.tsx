@@ -11,8 +11,8 @@ export function Button({ variant = "solid", className, type = "button", ...props
     <button
       type={type}
       className={cn(
-        "inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-5 text-sm font-semibold transition-transform duration-150 ease-out active:not-disabled:scale-[0.96] disabled:opacity-50",
-        variant === "solid" && "bg-copper text-surface hover:bg-copper-deep",
+        "relative inline-flex min-h-11 items-center justify-center gap-2 overflow-hidden rounded-full px-5 text-sm font-semibold transition-transform duration-150 ease-out active:not-disabled:scale-[0.96] disabled:opacity-50",
+        variant === "solid" && "bg-copper text-ink shadow-[0_8px_22px_rgb(255_106_26_/_0.35)] hover:bg-copper-deep",
         variant === "line" && "border border-line bg-surface text-ink hover:border-copper",
         variant === "ghost" && "text-ink hover:bg-sand",
         className,

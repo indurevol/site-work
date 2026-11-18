@@ -108,7 +108,9 @@ export function HomePage() {
             Ежедневно {contacts.hours.replace("Ежедневно ", "")}. Короткая стрижка от 300 ₽, модельная — от 800 ₽.
           </p>
           <div className="mt-7 flex flex-wrap gap-3">
-            <Button onClick={() => openBooking()}>Оставить заявку</Button>
+            <Button className="cta-pop min-h-12 px-6 text-base" onClick={() => openBooking()}>
+              Записаться
+            </Button>
             <a href="#prices" className="inline-flex min-h-11 items-center rounded-full border border-line bg-surface px-5 text-sm font-semibold">
               Смотреть цены
             </a>
@@ -374,7 +376,7 @@ export function HomePage() {
                   <p className="mt-3 text-sm text-sand">{open ? "Запись на сайте открыта" : "Запись на сайте закрыта — позвоните"}</p>
                   <div className="mt-4 flex flex-wrap gap-2">
                     <button
-                      className="min-h-11 rounded-full bg-copper px-4 text-sm font-semibold text-surface disabled:opacity-50"
+                      className="min-h-11 rounded-full bg-copper px-4 text-sm font-semibold text-ink disabled:opacity-50"
                       disabled={!open}
                       onClick={() => openBooking({ branchId: b.id })}
                     >

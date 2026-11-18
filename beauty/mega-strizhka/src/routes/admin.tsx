@@ -120,7 +120,7 @@ function AdminPage() {
                   onClick={() => setSection(id)}
                   className={cn(
                     "min-h-11 rounded-full px-3 text-left text-sm md:w-full md:rounded-2xl",
-                    section === id ? "bg-copper text-surface" : "bg-sand text-ink hover:bg-sand/70",
+                    section === id ? "bg-copper text-ink" : "bg-sand text-ink hover:bg-sand/70",
                   )}
                 >
                   {label}
@@ -198,7 +198,7 @@ function AdminPage() {
                           key={status}
                           className={cn(
                             "min-h-11 rounded-full px-3 text-sm",
-                            b.status === status ? "bg-copper text-surface" : "border border-line bg-surface",
+                            b.status === status ? "bg-copper text-ink" : "border border-line bg-surface",
                           )}
                           onClick={() => setBookingStatus(b.id, status)}
                         >
@@ -239,7 +239,7 @@ function AdminPage() {
                     </p>
                     <p className="mt-1 text-sm leading-6">{r.text}</p>
                     <div className="mt-3 flex flex-wrap gap-2">
-                      <button className="min-h-11 rounded-full bg-copper px-3 text-sm font-semibold text-surface" onClick={() => setGuestReviewStatus(r.id, "published")}>
+                      <button className="min-h-11 rounded-full bg-copper px-3 text-sm font-semibold text-ink" onClick={() => setGuestReviewStatus(r.id, "published")}>
                         Опубликовать
                       </button>
                       <button className="min-h-11 rounded-full border border-line px-3 text-sm" onClick={() => setGuestReviewStatus(r.id, "hidden")}>
@@ -303,7 +303,7 @@ function AdminPage() {
                       </div>
                       <input className={fieldClass} defaultValue={b.map} key={`${b.id}-map`} onBlur={(e) => save({ map: e.target.value })} aria-label="Ссылка на карту" />
                       <div className="flex flex-wrap gap-2">
-                        <button className={cn("min-h-11 rounded-full px-4 text-sm font-semibold", open ? "bg-copper text-surface" : "bg-sand")} onClick={() => toggleBranch(b.id)}>
+                        <button className={cn("min-h-11 rounded-full px-4 text-sm font-semibold", open ? "bg-copper text-ink" : "bg-sand")} onClick={() => toggleBranch(b.id)}>
                           {open ? "Запись открыта" : "Запись закрыта"}
                         </button>
                         <button className="min-h-11 rounded-full bg-sand px-4 text-sm font-semibold" onClick={() => toggleBranchHidden(b.id)}>
@@ -353,7 +353,7 @@ function AdminPage() {
                       </div>
                       <div className="flex flex-wrap gap-2">
                         {(Object.keys(categoryMeta) as PriceCategory[]).map((cat) => (
-                          <button key={cat} className={cn("min-h-11 rounded-full px-3 text-sm", item.category === cat ? "bg-copper text-surface" : "bg-sand")} onClick={() => save({ category: cat })}>
+                          <button key={cat} className={cn("min-h-11 rounded-full px-3 text-sm", item.category === cat ? "bg-copper text-ink" : "bg-sand")} onClick={() => save({ category: cat })}>
                             {categoryMeta[cat].label}
                           </button>
                         ))}
@@ -383,7 +383,7 @@ function AdminPage() {
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <input className={fieldClass} defaultValue={p.title} key={`${p.id}-title`} onBlur={(e) => save({ title: e.target.value })} aria-label="Название акции" />
                       <button
-                        className={cn("min-h-11 shrink-0 self-start rounded-full px-3 text-sm", promosOn[p.id] !== false ? "bg-copper text-surface" : "bg-sand")}
+                        className={cn("min-h-11 shrink-0 self-start rounded-full px-3 text-sm", promosOn[p.id] !== false ? "bg-copper text-ink" : "bg-sand")}
                         onClick={() => togglePromo(p.id)}
                       >
                         {promosOn[p.id] !== false ? "На сайте" : "Скрыта"}
@@ -434,7 +434,7 @@ function AdminPage() {
                       <button
                         key={b.id}
                         type="button"
-                        className={cn("min-h-11 rounded-full px-3 text-sm", on ? "bg-copper text-surface" : "bg-sand")}
+                        className={cn("min-h-11 rounded-full px-3 text-sm", on ? "bg-copper text-ink" : "bg-sand")}
                         onClick={() =>
                           setMasterBranches((cur) => (on ? cur.filter((id) => id !== b.id) : [...cur, b.id]))
                         }
@@ -464,7 +464,7 @@ function AdminPage() {
                         {m.branches.map((id) => branchList.find((b) => b.id === id)?.address).filter(Boolean).join(" · ")}
                       </p>
                       <button
-                        className={cn("min-h-11 self-start rounded-full px-3 text-sm", hidden ? "bg-sand" : "bg-copper text-surface")}
+                        className={cn("min-h-11 self-start rounded-full px-3 text-sm", hidden ? "bg-sand" : "bg-copper text-ink")}
                         onClick={() => toggleMaster(m.id)}
                       >
                         {hidden ? "Скрыт" : "На сайте"}
@@ -522,7 +522,7 @@ function AdminPage() {
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <h3 className="font-semibold">{item.name}</h3>
                         <button
-                          className={cn("min-h-11 shrink-0 rounded-full px-3 text-sm", on ? "bg-copper text-surface" : "bg-sand")}
+                          className={cn("min-h-11 shrink-0 rounded-full px-3 text-sm", on ? "bg-copper text-ink" : "bg-sand")}
                           onClick={() => {
                             toggleIntegration(item.id);
                             toast(on ? "Подключение снято с плана" : "Ключ добавим, когда сервис будет подключён");
@@ -603,7 +603,7 @@ function PriceForm({ onAdd }: { onAdd: (draft: { name: string; price: string; ca
       </div>
       <div className="flex flex-wrap gap-2">
         {(Object.keys(categoryMeta) as PriceCategory[]).map((cat) => (
-          <button key={cat} type="button" className={cn("min-h-11 rounded-full px-3 text-sm", category === cat ? "bg-copper text-surface" : "bg-sand")} onClick={() => setCategory(cat)}>
+          <button key={cat} type="button" className={cn("min-h-11 rounded-full px-3 text-sm", category === cat ? "bg-copper text-ink" : "bg-sand")} onClick={() => setCategory(cat)}>
             {categoryMeta[cat].label}
           </button>
         ))}
