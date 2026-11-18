@@ -38,15 +38,21 @@ export function HomePage() {
   const faqEdits = useSalon((s) => s.faqEdits);
   const extraFaqs = useSalon((s) => s.extraFaqs);
   const hiddenFaqIds = useSalon((s) => s.hiddenFaqIds);
+  const deletedBranchIds = useSalon((s) => s.deletedBranchIds);
+  const deletedPriceIds = useSalon((s) => s.deletedPriceIds);
+  const deletedPromoIds = useSalon((s) => s.deletedPromoIds);
+  const deletedMasterIds = useSalon((s) => s.deletedMasterIds);
+  const deletedReviewIds = useSalon((s) => s.deletedReviewIds);
+  const deletedFaqIds = useSalon((s) => s.deletedFaqIds);
   const siteInfo = useSalon((s) => s.siteInfo);
   const promosOn = useSalon((s) => s.promosOn);
   const contacts = siteContacts(siteInfo);
-  const shownBranches = mergeBranches(branchEdits, extraBranches, hiddenBranchIds);
-  const shownMasters = mergeMasters(masterEdits, extraMasters, hiddenMasterIds);
-  const shownReviews = mergeReviews(reviewEdits);
-  const shownFaqs = mergeFaqs(faqEdits, extraFaqs, hiddenFaqIds);
-  const priceList = mergePrices(priceEdits, extraPrices, priceOverrides, hiddenPriceIds);
-  const activePromos = mergePromos(promoEdits, extraPromos, [], promosOn);
+  const shownBranches = mergeBranches(branchEdits, extraBranches, hiddenBranchIds, false, deletedBranchIds);
+  const shownMasters = mergeMasters(masterEdits, extraMasters, hiddenMasterIds, false, deletedMasterIds);
+  const shownReviews = mergeReviews(reviewEdits, deletedReviewIds);
+  const shownFaqs = mergeFaqs(faqEdits, extraFaqs, hiddenFaqIds, false, deletedFaqIds);
+  const priceList = mergePrices(priceEdits, extraPrices, priceOverrides, hiddenPriceIds, false, deletedPriceIds);
+  const activePromos = mergePromos(promoEdits, extraPromos, [], promosOn, deletedPromoIds);
   const marksTotal = shownBranches.reduce((sum, b) => sum + b.marks, 0);
 
   const [cat, setCat] = useState<PriceCategory>("cut");

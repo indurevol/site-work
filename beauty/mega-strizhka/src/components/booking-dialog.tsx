@@ -24,13 +24,16 @@ export function BookingDialog() {
   const branchEdits = useSalon((s) => s.branchEdits);
   const extraBranches = useSalon((s) => s.extraBranches);
   const hiddenBranchIds = useSalon((s) => s.hiddenBranchIds);
+  const deletedBranchIds = useSalon((s) => s.deletedBranchIds);
+  const deletedPriceIds = useSalon((s) => s.deletedPriceIds);
+  const deletedMasterIds = useSalon((s) => s.deletedMasterIds);
   const priceEdits = useSalon((s) => s.priceEdits);
   const extraPrices = useSalon((s) => s.extraPrices);
   const priceOverrides = useSalon((s) => s.priceOverrides);
   const siteInfo = useSalon((s) => s.siteInfo);
   const contacts = siteContacts(siteInfo);
-  const branches = mergeBranches(branchEdits, extraBranches, hiddenBranchIds);
-  const prices = mergePrices(priceEdits, extraPrices, priceOverrides, hiddenPriceIds);
+  const branches = mergeBranches(branchEdits, extraBranches, hiddenBranchIds, false, deletedBranchIds);
+  const prices = mergePrices(priceEdits, extraPrices, priceOverrides, hiddenPriceIds, false, deletedPriceIds);
 
   const [step, setStep] = useState(0);
   const [service, setService] = useState(presetService);
@@ -60,7 +63,7 @@ export function BookingDialog() {
   const openBranches = branches.filter((b) => isBranchOpen(branchOpen, b.id));
   const masterOptions = [
     "Любой свободный",
-    ...mergeMasters(masterEdits, extraMasters, hiddenMasterIds)
+    ...mergeMasters(masterEdits, extraMasters, hiddenMasterIds, false, deletedMasterIds)
       .filter((m) => m.branches.includes(branchId))
       .map((m) => m.name),
   ];

@@ -30,7 +30,17 @@ function num(value: unknown, fallback: number) {
   return Number.isFinite(n) ? n : fallback;
 }
 
-export function mergeBranches(edits: EditMap, extra: ExtraBranch[], hidden: string[], includeHidden = false): Branch[] {
+function keep<T extends { id: string }>(items: T[], deleted: string[]) {
+  return deleted.length === 0 ? items : items.filter((item) => !deleted.includes(item.id));
+}
+
+export function mergeBranches(
+  edits: EditMap,
+  extra: ExtraBranch[],
+  hidden: string[],
+  includeHidden = false,
+  deleted: string[] = [],
+): Branch[] {
   const base = branches.map((b) => {
     const edit = edits[b.id] ?? {};
     return {
@@ -45,7 +55,8 @@ export function mergeBranches(edits: EditMap, extra: ExtraBranch[], hidden: stri
     };
   });
   const all = [...base, ...extra];
-  return includeHidden ? all : all.filter((b) => !hidden.includes(b.id));
+  const visible = includeHidden ? all : all.filter((b) => !hidden.includes(b.id));
+  return keep(visible, deleted);
 }
 
 export function mergePrices(
@@ -54,6 +65,7 @@ export function mergePrices(
   overrides: Record<string, string>,
   hidden: string[],
   includeHidden = false,
+  deleted: string[] = [],
 ): PriceItem[] {
   const base = prices.map((item) => {
     const edit = edits[item.id] ?? {};
@@ -71,20 +83,27 @@ export function mergePrices(
     price: overrides[item.id] || item.price,
   }));
   const all = [...base, ...added];
-  return includeHidden ? all : all.filter((item) => !hidden.includes(item.id));
+  const visible = includeHidden ? all : all.filter((item) => !hidden.includes(item.id));
+  return keep(visible, deleted);
 }
 
-export function mergePromos(edits: EditMap, extra: ExtraPromo[], includeHiddenIds: string[] = [], hiddenOff?: Record<string, boolean>) {
+export function mergePromos(
+  edits: EditMap,
+  extra: ExtraPromo[],
+  includeHiddenIds: string[] = [],
+  hiddenOff?: Record<string, boolean>,
+  deleted: string[] = [],
+) {
   const base = promos.map((item) => {
     const edit = edits[item.id] ?? {};
     return { ...item, title: text(edit.title, item.title), text: text(edit.text, item.text) };
   });
   const all = [...base, ...extra];
-  if (!hiddenOff) return all.filter((item) => !includeHiddenIds.includes(item.id));
-  return all.filter((item) => hiddenOff[item.id] !== false);
+  const visible = !hiddenOff ? all.filter((item) => !includeHiddenIds.includes(item.id)) : all.filter((item) => hiddenOff[item.id] !== false);
+  return keep(visible, deleted);
 }
 
-export function mergeMasters(edits: EditMap, extra: Master[], hidden: string[], includeHidden = false): Master[] {
+export function mergeMasters(edits: EditMap, extra: Master[], hidden: string[], includeHidden = false, deleted: string[] = []): Master[] {
   const apply = (m: Master): Master => {
     const edit = edits[m.id] ?? {};
     const branchList = Array.isArray(edit.branches) ? edit.branches.filter((x): x is string => typeof x === "string") : m.branches;
@@ -97,11 +116,13 @@ export function mergeMasters(edits: EditMap, extra: Master[], hidden: string[], 
     };
   };
   const all = [...masters.map(apply), ...extra.map(apply)];
-  return includeHidden ? all : all.filter((m) => !hidden.includes(m.id));
+  const visible = includeHidden ? all : all.filter((m) => !hidden.includes(m.id));
+  return keep(visible, deleted);
 }
 
-export function mergeReviews(edits: EditMap): Review[] {
-  return reviews.map((r) => {
+export function mergeReviews(edits: EditMap, deleted: string[] = []): Review[] {
+  return keep(
+    reviews.map((r) => {
     const edit = edits[r.id] ?? {};
     return {
       ...r,
@@ -110,17 +131,20 @@ export function mergeReviews(edits: EditMap): Review[] {
       master: text(edit.master, r.master ?? ""),
       source: text(edit.source, r.source),
     };
-  });
+  }),
+    deleted,
+  );
 }
 
-export function mergeFaqs(edits: EditMap, extra: ExtraFaq[], hidden: string[], includeHidden = false) {
+export function mergeFaqs(edits: EditMap, extra: ExtraFaq[], hidden: string[], includeHidden = false, deleted: string[] = []) {
   const base = faqs.map((item, i) => {
     const id = `faq-${i}`;
     const edit = edits[id] ?? {};
     return { id, q: text(edit.q, item.q), a: text(edit.a, item.a) };
   });
   const all = [...base, ...extra];
-  return includeHidden ? all : all.filter((item) => !hidden.includes(item.id));
+  const visible = includeHidden ? all : all.filter((item) => !hidden.includes(item.id));
+  return keep(visible, deleted);
 }
 
 export function siteContacts(info?: Partial<SiteInfo>) {

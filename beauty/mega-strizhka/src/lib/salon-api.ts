@@ -76,6 +76,12 @@ export type ContentState = {
   faqEdits: EditMap;
   extraFaqs: ExtraFaq[];
   hiddenFaqIds: string[];
+  deletedBranchIds: string[];
+  deletedPriceIds: string[];
+  deletedPromoIds: string[];
+  deletedMasterIds: string[];
+  deletedReviewIds: string[];
+  deletedFaqIds: string[];
   siteInfo: SiteInfo;
 };
 
@@ -145,6 +151,14 @@ export async function postReview(review: { author: string; text: string; branchI
   });
   if (!res.ok) throw new Error(String(res.status));
   return (await res.json()) as ApiReview;
+}
+
+export async function deleteBooking(token: string, id: string) {
+  const res = await fetch(`${SALON_API}/admin/bookings/${id}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok && res.status !== 404) throw new Error(String(res.status));
 }
 
 export async function patchBooking(token: string, id: string, status: BookingStatus) {

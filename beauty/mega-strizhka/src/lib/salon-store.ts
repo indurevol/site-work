@@ -4,6 +4,7 @@ import {
   fetchAdminState,
   fetchPublicContent,
   patchBooking,
+  deleteBooking,
   pushContent,
   readAdminToken,
   type ContentState,
@@ -64,6 +65,12 @@ type Persisted = {
   faqEdits: ContentState["faqEdits"];
   extraFaqs: ExtraFaq[];
   hiddenFaqIds: string[];
+  deletedBranchIds: string[];
+  deletedPriceIds: string[];
+  deletedPromoIds: string[];
+  deletedMasterIds: string[];
+  deletedReviewIds: string[];
+  deletedFaqIds: string[];
   siteInfo: SiteInfo;
 };
 
@@ -96,6 +103,7 @@ type State = Persisted & {
   addFaqItem: (item: ExtraFaq) => void;
   toggleFaq: (id: string) => void;
   setSiteInfo: (patch: Partial<SiteInfo>) => void;
+  removeCard: (kind: "branch" | "price" | "promo" | "master" | "review" | "faq" | "guest" | "booking", id: string) => void;
 };
 
 const KEY = "mega-strizhka-demo";
@@ -155,6 +163,12 @@ function initialPersisted(): Persisted {
     faqEdits: {},
     extraFaqs: [],
     hiddenFaqIds: [],
+    deletedBranchIds: [],
+    deletedPriceIds: [],
+    deletedPromoIds: [],
+    deletedMasterIds: [],
+    deletedReviewIds: [],
+    deletedFaqIds: [],
     siteInfo: { phone: "", phoneAlt: "", hours: "", yclients: "" },
   };
 }
@@ -190,6 +204,12 @@ function readPersisted(): Persisted | null {
       faqEdits: data.faqEdits ?? {},
       extraFaqs: Array.isArray(data.extraFaqs) ? data.extraFaqs : [],
       hiddenFaqIds: Array.isArray(data.hiddenFaqIds) ? data.hiddenFaqIds : [],
+      deletedBranchIds: Array.isArray(data.deletedBranchIds) ? data.deletedBranchIds : [],
+      deletedPriceIds: Array.isArray(data.deletedPriceIds) ? data.deletedPriceIds : [],
+      deletedPromoIds: Array.isArray(data.deletedPromoIds) ? data.deletedPromoIds : [],
+      deletedMasterIds: Array.isArray(data.deletedMasterIds) ? data.deletedMasterIds : [],
+      deletedReviewIds: Array.isArray(data.deletedReviewIds) ? data.deletedReviewIds : [],
+      deletedFaqIds: Array.isArray(data.deletedFaqIds) ? data.deletedFaqIds : [],
       siteInfo: { ...base.siteInfo, ...data.siteInfo },
     };
   } catch {
@@ -220,6 +240,12 @@ function contentOf(state: State): ContentState {
     faqEdits: state.faqEdits,
     extraFaqs: state.extraFaqs,
     hiddenFaqIds: state.hiddenFaqIds,
+    deletedBranchIds: state.deletedBranchIds,
+    deletedPriceIds: state.deletedPriceIds,
+    deletedPromoIds: state.deletedPromoIds,
+    deletedMasterIds: state.deletedMasterIds,
+    deletedReviewIds: state.deletedReviewIds,
+    deletedFaqIds: state.deletedFaqIds,
     siteInfo: state.siteInfo,
   };
 }
@@ -248,6 +274,12 @@ function save(state: State) {
     faqEdits: state.faqEdits,
     extraFaqs: state.extraFaqs,
     hiddenFaqIds: state.hiddenFaqIds,
+    deletedBranchIds: state.deletedBranchIds,
+    deletedPriceIds: state.deletedPriceIds,
+    deletedPromoIds: state.deletedPromoIds,
+    deletedMasterIds: state.deletedMasterIds,
+    deletedReviewIds: state.deletedReviewIds,
+    deletedFaqIds: state.deletedFaqIds,
     siteInfo: state.siteInfo,
   };
   localStorage.setItem(KEY, JSON.stringify(slice));
@@ -403,6 +435,43 @@ export const useSalon = create<State>((set, get) => ({
   },
   setSiteInfo: (patch) => {
     set({ siteInfo: { ...get().siteInfo, ...patch } });
+    save(get());
+  },
+  removeCard: (kind, id) => {
+    const add = (list: string[]) => (list.includes(id) ? list : [...list, id]);
+    if (kind === "branch") {
+      set({
+        extraBranches: get().extraBranches.filter((b) => b.id !== id),
+        deletedBranchIds: add(get().deletedBranchIds),
+      });
+    } else if (kind === "price") {
+      set({
+        extraPrices: get().extraPrices.filter((p) => p.id !== id),
+        deletedPriceIds: add(get().deletedPriceIds),
+      });
+    } else if (kind === "promo") {
+      set({
+        extraPromos: get().extraPromos.filter((p) => p.id !== id),
+        deletedPromoIds: add(get().deletedPromoIds),
+      });
+    } else if (kind === "master") {
+      set({
+        extraMasters: get().extraMasters.filter((m) => m.id !== id),
+        deletedMasterIds: add(get().deletedMasterIds),
+      });
+    } else if (kind === "review") {
+      set({ deletedReviewIds: add(get().deletedReviewIds) });
+    } else if (kind === "faq") {
+      set({
+        extraFaqs: get().extraFaqs.filter((f) => f.id !== id),
+        deletedFaqIds: add(get().deletedFaqIds),
+      });
+    } else if (kind === "guest") {
+      set({ guestReviews: get().guestReviews.filter((r) => r.id !== id) });
+    } else {
+      set({ bookings: get().bookings.filter((b) => b.id !== id) });
+      void deleteBooking(readAdminToken(), id).catch(() => undefined);
+    }
     save(get());
   },
 }));

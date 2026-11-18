@@ -73,6 +73,13 @@ function AdminPage() {
   const faqEdits = useSalon((s) => s.faqEdits);
   const extraFaqs = useSalon((s) => s.extraFaqs);
   const hiddenFaqIds = useSalon((s) => s.hiddenFaqIds);
+  const deletedBranchIds = useSalon((s) => s.deletedBranchIds);
+  const deletedPriceIds = useSalon((s) => s.deletedPriceIds);
+  const deletedPromoIds = useSalon((s) => s.deletedPromoIds);
+  const deletedMasterIds = useSalon((s) => s.deletedMasterIds);
+  const deletedReviewIds = useSalon((s) => s.deletedReviewIds);
+  const deletedFaqIds = useSalon((s) => s.deletedFaqIds);
+  const removeCard = useSalon((s) => s.removeCard);
   const siteInfo = useSalon((s) => s.siteInfo);
   const editMap = useSalon((s) => s.editMap);
   const addBranch = useSalon((s) => s.addBranch);
@@ -91,12 +98,12 @@ function AdminPage() {
     void connectAdmin();
   }, [connectAdmin]);
 
-  const branchList = mergeBranches(branchEdits, extraBranches, hiddenBranchIds, true);
-  const priceList = mergePrices(priceEdits, extraPrices, priceOverrides, hiddenPriceIds, true);
-  const promoList = mergePromos(promoEdits, extraPromos);
-  const masterList = mergeMasters(masterEdits, extraMasters, hiddenMasterIds, true);
-  const reviewList = mergeReviews(reviewEdits);
-  const faqList = mergeFaqs(faqEdits, extraFaqs, hiddenFaqIds, true);
+  const branchList = mergeBranches(branchEdits, extraBranches, hiddenBranchIds, true, deletedBranchIds);
+  const priceList = mergePrices(priceEdits, extraPrices, priceOverrides, hiddenPriceIds, true, deletedPriceIds);
+  const promoList = mergePromos(promoEdits, extraPromos, [], undefined, deletedPromoIds);
+  const masterList = mergeMasters(masterEdits, extraMasters, hiddenMasterIds, true, deletedMasterIds);
+  const reviewList = mergeReviews(reviewEdits, deletedReviewIds);
+  const faqList = mergeFaqs(faqEdits, extraFaqs, hiddenFaqIds, true, deletedFaqIds);
   const fresh = bookings.filter((b) => b.status === "new").length;
   const pending = guestReviews.filter((r) => r.status === "pending").length;
 
@@ -205,6 +212,7 @@ function AdminPage() {
                           {statusLabel[status]}
                         </button>
                       ))}
+                      <ConfirmDelete name="заявку" onYes={() => removeCard("booking", b.id)} />
                     </div>
                   </li>
                 ))}
@@ -245,6 +253,7 @@ function AdminPage() {
                       <button className="min-h-11 rounded-full border border-line px-3 text-sm" onClick={() => setGuestReviewStatus(r.id, "hidden")}>
                         Скрыть
                       </button>
+                      <ConfirmDelete name="отзыв" onYes={() => removeCard("guest", r.id)} />
                     </div>
                   </li>
                 ))}
@@ -260,6 +269,7 @@ function AdminPage() {
                       <button className="min-h-11 self-start text-sm font-semibold text-copper-deep" onClick={() => toggleHiddenReview(r.id)}>
                         {hidden ? "Вернуть" : "Скрыть"}
                       </button>
+                      <ConfirmDelete name="отзыв" onYes={() => removeCard("review", r.id)} />
                     </li>
                   );
                 })}
@@ -309,6 +319,7 @@ function AdminPage() {
                         <button className="min-h-11 rounded-full bg-sand px-4 text-sm font-semibold" onClick={() => toggleBranchHidden(b.id)}>
                           {hidden ? "Скрыт с сайта" : "На сайте"}
                         </button>
+                        <ConfirmDelete name={b.title} onYes={() => removeCard("branch", b.id)} />
                       </div>
                     </li>
                   );
@@ -360,6 +371,7 @@ function AdminPage() {
                         <button className="min-h-11 text-sm font-semibold text-copper-deep" onClick={() => togglePrice(item.id)}>
                           {hidden ? "Показать" : "Скрыть"}
                         </button>
+                        <ConfirmDelete name={item.name} onYes={() => removeCard("price", item.id)} />
                       </div>
                     </li>
                   );
@@ -388,6 +400,7 @@ function AdminPage() {
                       >
                         {promosOn[p.id] !== false ? "На сайте" : "Скрыта"}
                       </button>
+                      <ConfirmDelete name={p.title} onYes={() => removeCard("promo", p.id)} />
                     </div>
                     <textarea className={`${fieldClass} mt-2 min-h-20 py-3`} defaultValue={p.text} key={`${p.id}-text`} onBlur={(e) => save({ text: e.target.value })} aria-label="Текст акции" />
                   </li>
@@ -463,12 +476,15 @@ function AdminPage() {
                       <p className="text-sm text-muted">
                         {m.branches.map((id) => branchList.find((b) => b.id === id)?.address).filter(Boolean).join(" · ")}
                       </p>
-                      <button
-                        className={cn("min-h-11 self-start rounded-full px-3 text-sm", hidden ? "bg-sand" : "bg-copper text-ink")}
-                        onClick={() => toggleMaster(m.id)}
-                      >
-                        {hidden ? "Скрыт" : "На сайте"}
-                      </button>
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          className={cn("min-h-11 self-start rounded-full px-3 text-sm", hidden ? "bg-sand" : "bg-copper text-ink")}
+                          onClick={() => toggleMaster(m.id)}
+                        >
+                          {hidden ? "Скрыт" : "На сайте"}
+                        </button>
+                        <ConfirmDelete name={m.name} onYes={() => removeCard("master", m.id)} />
+                      </div>
                     </li>
                   );
                 })}
@@ -501,6 +517,7 @@ function AdminPage() {
                       <button className="min-h-11 self-start text-sm font-semibold text-copper-deep" onClick={() => toggleFaq(item.id)}>
                         {hidden ? "Скрыт" : "На сайте"}
                       </button>
+                      <ConfirmDelete name="вопрос" onYes={() => removeCard("faq", item.id)} />
                     </li>
                   );
                 })}
@@ -557,6 +574,28 @@ function Stat({ n, label }: { n: string; label: string }) {
       <p className="font-display text-4xl text-copper">{n}</p>
       <p className="text-sm text-muted">{label}</p>
     </div>
+  );
+}
+
+function ConfirmDelete({ name, onYes }: { name: string; onYes: () => void }) {
+  const [ask, setAsk] = useState(false);
+  if (!ask) {
+    return (
+      <button type="button" className="min-h-11 rounded-full px-3 text-sm font-semibold text-copper-deep" onClick={() => setAsk(true)}>
+        Удалить
+      </button>
+    );
+  }
+  return (
+    <span className="flex flex-wrap items-center gap-2">
+      <span className="text-sm">Удалить {name}?</span>
+      <button type="button" className="min-h-11 rounded-full bg-ink px-3 text-sm font-semibold text-surface" onClick={onYes}>
+        Да, удалить
+      </button>
+      <button type="button" className="min-h-11 rounded-full bg-sand px-3 text-sm" onClick={() => setAsk(false)}>
+        Оставить
+      </button>
+    </span>
   );
 }
 
