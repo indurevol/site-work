@@ -5,11 +5,11 @@ import { toast } from "sonner";
 import {
   YCLIENTS,
   branches,
-  masters,
   prices,
   times,
 } from "@/data/salon";
-import { isBranchOpen, useSalon, type Booking } from "@/lib/salon-store";
+import { isBranchOpen, useSalon, visibleMasters, type Booking } from "@/lib/salon-store";
+import { postBooking } from "@/lib/salon-api";
 import { Button, Field, fieldClass } from "@/components/ui";
 
 const steps = ["Услуга", "Салон", "Время", "Контакты"];
@@ -22,6 +22,8 @@ export function BookingDialog() {
   const branchOpen = useSalon((s) => s.branchOpen);
   const hiddenPriceIds = useSalon((s) => s.hiddenPriceIds);
   const addBooking = useSalon((s) => s.addBooking);
+  const extraMasters = useSalon((s) => s.extraMasters);
+  const hiddenMasterIds = useSalon((s) => s.hiddenMasterIds);
 
   const [step, setStep] = useState(0);
   const [service, setService] = useState(presetService);
@@ -51,7 +53,9 @@ export function BookingDialog() {
   const openBranches = branches.filter((b) => isBranchOpen(branchOpen, b.id));
   const masterOptions = [
     "Любой свободный",
-    ...masters.filter((m) => m.branches.includes(branchId)).map((m) => m.name),
+    ...visibleMasters(extraMasters, hiddenMasterIds)
+      .filter((m) => m.branches.includes(branchId))
+      .map((m) => m.name),
   ];
 
   function next() {
@@ -62,28 +66,29 @@ export function BookingDialog() {
     setStep((s) => Math.min(s + 1, 3));
   }
 
-  function submit() {
+  async function submit() {
     const digits = phone.replace(/\D/g, "");
     if (name.trim().length < 2) return setError("Как к вам обращаться?");
     if (digits.length < 10) return setError("Телефон нужен полностью.");
-    const booking: Booking = {
-      id: `b-${Date.now()}`,
-      name: name.trim(),
-      phone: phone.trim(),
-      branchId,
-      service,
-      master,
-      date,
-      time,
-      wish: wish.trim(),
-      status: "new",
-      createdAt: new Date().toISOString(),
-    };
-    addBooking(booking);
-    setDone(booking);
-    toast("Это заглушка. Заявка остаётся только в этом браузере и не уходит в салон, на почту или в YClients.", {
-      duration: 8000,
-    });
+    try {
+      const booking = await postBooking({
+        name: name.trim(),
+        phone: phone.trim(),
+        branchId,
+        service,
+        master,
+        date,
+        time,
+        wish: wish.trim(),
+      });
+      addBooking(booking);
+      setDone(booking);
+      toast("Заявку получили. Администратор подтвердит время.");
+    } catch {
+      toast("Это заглушка. Заявка остаётся только в этом браузере и не уходит в салон, на почту или в YClients.", {
+        duration: 8000,
+      });
+    }
   }
 
   const today = new Date().toISOString().slice(0, 10);

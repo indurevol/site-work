@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Shell } from "@/components/shell";
@@ -6,13 +6,13 @@ import {
   branches,
   externalConcern,
   integrations,
-  masters,
   prices,
   promos,
   reviews,
   categoryMeta,
 } from "@/data/salon";
-import { displayPrice, isBranchOpen, useSalon, type BookingStatus } from "@/lib/salon-store";
+import { displayPrice, isBranchOpen, useSalon, visibleMasters, type BookingStatus } from "@/lib/salon-store";
+import { readAdminToken, writeAdminToken } from "@/lib/salon-api";
 import { Button, fieldClass } from "@/components/ui";
 import { cn } from "@/lib/cn";
 
@@ -57,6 +57,20 @@ function AdminPage() {
   const togglePromo = useSalon((s) => s.togglePromo);
   const integrationOn = useSalon((s) => s.integrationOn);
   const toggleIntegration = useSalon((s) => s.toggleIntegration);
+  const extraMasters = useSalon((s) => s.extraMasters);
+  const hiddenMasterIds = useSalon((s) => s.hiddenMasterIds);
+  const addMaster = useSalon((s) => s.addMaster);
+  const toggleMaster = useSalon((s) => s.toggleMaster);
+  const connectAdmin = useSalon((s) => s.connectAdmin);
+  const [token, setToken] = useState("");
+  const [masterName, setMasterName] = useState("");
+  const [masterRole, setMasterRole] = useState("");
+  const [masterNote, setMasterNote] = useState("");
+  const [masterBranches, setMasterBranches] = useState<string[]>([branches[0].id]);
+
+  useEffect(() => {
+    setToken(readAdminToken());
+  }, []);
 
   const fresh = bookings.filter((b) => b.status === "new").length;
   const pending = guestReviews.filter((r) => r.status === "pending").length;
@@ -69,8 +83,25 @@ function AdminPage() {
             <p className="text-xs font-semibold tracking-wide text-copper-deep">Для администратора</p>
             <h1 className="mt-1 font-display text-4xl leading-none sm:text-5xl">Админка</h1>
           </div>
-          <p className="max-w-xs text-sm leading-6 text-muted">Заявки, отзывы, прайс и филиалы сети.</p>
+          <p className="max-w-xs text-sm leading-6 text-muted">Заявки, отзывы, прайс и мастера сети.</p>
         </div>
+        <form
+          className="mt-4 flex flex-col gap-2 sm:flex-row"
+          onSubmit={(e) => {
+            e.preventDefault();
+            writeAdminToken(token);
+            void connectAdmin().then((ok) => toast(ok ? "Ключ подошёл, данные с сервера" : "Ключ не подошёл"));
+          }}
+        >
+          <input
+            className={`${fieldClass} sm:max-w-sm`}
+            value={token}
+            onChange={(e) => setToken(e.target.value)}
+            placeholder="Ключ администратора"
+            autoComplete="off"
+          />
+          <Button type="submit">Подключить</Button>
+        </form>
 
         <div className="mt-6 grid min-w-0 gap-6 md:grid-cols-[13rem_minmax(0,1fr)]">
           <aside className="min-w-0">
@@ -311,30 +342,78 @@ function AdminPage() {
           {section === "masters" && (
             <section>
               <h2 className="font-display text-3xl leading-tight sm:text-4xl">Мастера</h2>
-              <p className="mt-2 text-sm text-muted">Среда — выходной, остальные дни с 10:00 до 20:00.</p>
+              <p className="mt-2 text-sm text-muted">Новый мастер появляется на сайте. Скрытый пропадает из записи.</p>
+              <form
+                className="mt-5 grid gap-3 rounded-3xl border border-line p-4"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (masterName.trim().length < 2 || masterRole.trim().length < 2 || masterBranches.length === 0) {
+                    toast("Нужны имя, роль и хотя бы один салон");
+                    return;
+                  }
+                  addMaster({
+                    id: `m-${Date.now()}`,
+                    name: masterName.trim(),
+                    role: masterRole.trim(),
+                    note: masterNote.trim(),
+                    branches: masterBranches,
+                  });
+                  setMasterName("");
+                  setMasterRole("");
+                  setMasterNote("");
+                  toast("Мастер добавлен");
+                }}
+              >
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <input className={fieldClass} value={masterName} onChange={(e) => setMasterName(e.target.value)} placeholder="Имя" />
+                  <input className={fieldClass} value={masterRole} onChange={(e) => setMasterRole(e.target.value)} placeholder="Что делает" />
+                </div>
+                <textarea className={`${fieldClass} min-h-20 py-3`} value={masterNote} onChange={(e) => setMasterNote(e.target.value)} placeholder="Коротко, как о нём говорят гости" />
+                <div className="flex flex-wrap gap-2">
+                  {branches.map((b) => {
+                    const on = masterBranches.includes(b.id);
+                    return (
+                      <button
+                        key={b.id}
+                        type="button"
+                        className={cn("min-h-11 rounded-full px-3 text-sm", on ? "bg-copper text-surface" : "bg-sand")}
+                        onClick={() =>
+                          setMasterBranches((cur) => (on ? cur.filter((id) => id !== b.id) : [...cur, b.id]))
+                        }
+                      >
+                        {b.title}
+                      </button>
+                    );
+                  })}
+                </div>
+                <Button type="submit" className="self-start">
+                  Добавить мастера
+                </Button>
+              </form>
               <ul className="mt-5 space-y-3">
-                {masters.map((m) => (
-                  <li key={m.id} className="rounded-3xl border border-line p-4">
-                    <p className="font-semibold">{m.name}</p>
-                    <p className="text-sm text-copper-deep">{m.role}</p>
-                    <p className="mt-1 text-sm text-muted">
-                      {m.branches.map((id) => branches.find((b) => b.id === id)?.address).join(" · ")}
-                    </p>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {["Пн", "Вт", "Ср", "Чт", "Пт"].map((d, i) => (
-                        <span
-                          key={d}
-                          className={cn(
-                            "rounded-full px-3 py-2 text-xs",
-                            i === 2 ? "bg-sand text-muted" : "bg-paper text-ink",
-                          )}
+                {visibleMasters(extraMasters, []).map((m) => {
+                  const hidden = hiddenMasterIds.includes(m.id);
+                  return (
+                    <li key={m.id} className="rounded-3xl border border-line p-4">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div>
+                          <p className="font-semibold">{m.name}</p>
+                          <p className="text-sm text-copper-deep">{m.role}</p>
+                          <p className="mt-1 text-sm text-muted">
+                            {m.branches.map((id) => branches.find((b) => b.id === id)?.address).join(" · ")}
+                          </p>
+                          {m.note ? <p className="mt-2 text-sm leading-6">{m.note}</p> : null}
+                        </div>
+                        <button
+                          className={cn("min-h-11 shrink-0 self-start rounded-full px-3 text-sm", hidden ? "bg-sand" : "bg-copper text-surface")}
+                          onClick={() => toggleMaster(m.id)}
                         >
-                          {d} · {i === 2 ? "выходной" : "10–20"}
-                        </span>
-                      ))}
-                    </div>
-                  </li>
-                ))}
+                          {hidden ? "Скрыт" : "На сайте"}
+                        </button>
+                      </div>
+                    </li>
+                  );
+                })}
               </ul>
             </section>
           )}

@@ -14,14 +14,14 @@ import {
   categoryMeta,
   faqs,
   formatMarks,
-  masters,
   prices,
   promos,
   reviews,
   totalMarks,
   type PriceCategory,
 } from "@/data/salon";
-import { displayPrice, isBranchOpen, useSalon } from "@/lib/salon-store";
+import { displayPrice, isBranchOpen, useSalon, visibleMasters } from "@/lib/salon-store";
+import { postReview } from "@/lib/salon-api";
 import { Button, Field, Rise, Stars, fieldClass } from "@/components/ui";
 import { asset, cn } from "@/lib/cn";
 
@@ -35,6 +35,9 @@ export function HomePage() {
   const guestReviews = useSalon((s) => s.guestReviews);
   const addGuestReview = useSalon((s) => s.addGuestReview);
   const branchOpen = useSalon((s) => s.branchOpen);
+  const extraMasters = useSalon((s) => s.extraMasters);
+  const hiddenMasterIds = useSalon((s) => s.hiddenMasterIds);
+  const shownMasters = visibleMasters(extraMasters, hiddenMasterIds);
   const promosOn = useSalon((s) => s.promosOn);
 
   const [cat, setCat] = useState<PriceCategory>("cut");
@@ -65,23 +68,25 @@ export function HomePage() {
   );
   const activePromos = promos.filter((p) => promosOn[p.id] !== false);
 
-  function sendReview() {
+  async function sendReview() {
     if (author.trim().length < 2 || text.trim().length < 8) {
       toast("Нужны имя и пара предложений");
       return;
     }
-    addGuestReview({
-      id: `g-${Date.now()}`,
-      author: author.trim(),
-      text: text.trim(),
-      branchId: reviewBranch,
-      stars,
-      status: "pending",
-      createdAt: new Date().toISOString(),
-    });
-    setAuthor("");
-    setText("");
-    toast("Спасибо. Отзыв прочитаем перед публикацией");
+    try {
+      const review = await postReview({
+        author: author.trim(),
+        text: text.trim(),
+        branchId: reviewBranch,
+        stars,
+      });
+      addGuestReview(review);
+      setAuthor("");
+      setText("");
+      toast("Спасибо. Отзыв прочитаем перед публикацией");
+    } catch {
+      toast("Не удалось отправить отзыв. Попробуйте ещё раз");
+    }
   }
 
   return (
@@ -238,7 +243,7 @@ export function HomePage() {
           Имена взяты из открытых отзывов. Стаж и портреты не выдуманы — фото работ подключим отдельно.
         </p>
         <div className="mt-8 grid gap-4 md:grid-cols-3">
-          {masters.map((m) => (
+          {shownMasters.map((m) => (
             <article key={m.id} className="rounded-3xl bg-surface p-5 ring-1 ring-line">
               <div className="flex size-14 items-center justify-center rounded-full bg-sand font-display text-2xl">
                 {m.name.slice(0, 1)}

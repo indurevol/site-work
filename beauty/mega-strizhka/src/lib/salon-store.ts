@@ -1,5 +1,13 @@
 import { create } from "zustand";
-import { prices, promos } from "@/data/salon";
+import { masters, prices, promos, type Master } from "@/data/salon";
+import {
+  fetchAdminState,
+  fetchPublicContent,
+  patchBooking,
+  pushContent,
+  readAdminToken,
+  type ContentState,
+} from "@/lib/salon-api";
 
 export type BookingStatus = "new" | "confirmed" | "cancelled";
 
@@ -36,6 +44,8 @@ type Persisted = {
   hiddenPriceIds: string[];
   branchOpen: Record<string, boolean>;
   promosOn: Record<string, boolean>;
+  hiddenMasterIds: string[];
+  extraMasters: Master[];
   integrationOn: Record<string, boolean>;
 };
 
@@ -57,6 +67,9 @@ type State = Persisted & {
   toggleBranch: (id: string) => void;
   togglePromo: (id: string) => void;
   toggleIntegration: (id: string) => void;
+  addMaster: (master: Master) => void;
+  toggleMaster: (id: string) => void;
+  connectAdmin: () => Promise<boolean>;
 };
 
 const KEY = "mega-strizhka-demo";
@@ -101,6 +114,8 @@ function initialPersisted(): Persisted {
     hiddenPriceIds: [],
     branchOpen: {},
     promosOn: Object.fromEntries(promos.map((p) => [p.id, true])),
+    extraMasters: [],
+    hiddenMasterIds: [],
     integrationOn: {},
   };
 }
@@ -121,11 +136,27 @@ function readPersisted(): Persisted | null {
       hiddenPriceIds: Array.isArray(data.hiddenPriceIds) ? data.hiddenPriceIds : [],
       branchOpen: data.branchOpen ?? {},
       promosOn: { ...base.promosOn, ...data.promosOn },
+      extraMasters: Array.isArray(data.extraMasters) ? data.extraMasters : [],
+      hiddenMasterIds: Array.isArray(data.hiddenMasterIds) ? data.hiddenMasterIds : [],
       integrationOn: data.integrationOn ?? {},
     };
   } catch {
     return null;
   }
+}
+
+function contentOf(state: State): ContentState {
+  return {
+    priceOverrides: state.priceOverrides,
+    hiddenPriceIds: state.hiddenPriceIds,
+    branchOpen: state.branchOpen,
+    promosOn: state.promosOn,
+    hiddenReviewIds: state.hiddenReviewIds,
+    guestReviews: state.guestReviews,
+    extraMasters: state.extraMasters,
+    hiddenMasterIds: state.hiddenMasterIds,
+    integrationOn: state.integrationOn,
+  };
 }
 
 function save(state: State) {
@@ -137,9 +168,14 @@ function save(state: State) {
     hiddenPriceIds: state.hiddenPriceIds,
     branchOpen: state.branchOpen,
     promosOn: state.promosOn,
+    extraMasters: state.extraMasters,
+    hiddenMasterIds: state.hiddenMasterIds,
     integrationOn: state.integrationOn,
   };
   localStorage.setItem(KEY, JSON.stringify(slice));
+  const token = readAdminToken();
+  if (!token) return;
+  void pushContent(token, contentOf(state)).catch(() => undefined);
 }
 
 export const useSalon = create<State>((set, get) => ({
@@ -152,6 +188,15 @@ export const useSalon = create<State>((set, get) => ({
     if (get().hydrated) return;
     const data = readPersisted();
     set(data ? { ...data, hydrated: true } : { hydrated: true });
+    void fetchPublicContent().then((content) => {
+      if (!content) return;
+      set({ ...content });
+      const token = readAdminToken();
+      if (!token) return;
+      void fetchAdminState(token)
+        .then((admin) => set({ ...admin.content, bookings: admin.bookings }))
+        .catch(() => undefined);
+    });
   },
   openBooking: (partial) =>
     set({
@@ -169,6 +214,8 @@ export const useSalon = create<State>((set, get) => ({
       bookings: get().bookings.map((b) => (b.id === id ? { ...b, status } : b)),
     });
     save(get());
+    const token = readAdminToken();
+    if (token) void patchBooking(token, id, status).catch(() => undefined);
   },
   addGuestReview: (review) => {
     set({ guestReviews: [review, ...get().guestReviews] });
@@ -217,7 +264,36 @@ export const useSalon = create<State>((set, get) => ({
     });
     save(get());
   },
+  addMaster: (master) => {
+    set({ extraMasters: [master, ...get().extraMasters.filter((m) => m.id !== master.id)] });
+    save(get());
+  },
+  toggleMaster: (id) => {
+    const has = get().hiddenMasterIds.includes(id);
+    set({
+      hiddenMasterIds: has
+        ? get().hiddenMasterIds.filter((x) => x !== id)
+        : [...get().hiddenMasterIds, id],
+    });
+    save(get());
+  },
+  connectAdmin: async () => {
+    const token = readAdminToken();
+    if (!token) return false;
+    try {
+      const admin = await fetchAdminState(token);
+      set({ ...admin.content, bookings: admin.bookings });
+      save(get());
+      return true;
+    } catch {
+      return false;
+    }
+  },
 }));
+
+export function visibleMasters(extraMasters: Master[], hiddenMasterIds: string[]) {
+  return [...masters, ...extraMasters].filter((m) => !hiddenMasterIds.includes(m.id));
+}
 
 export function isBranchOpen(branchOpen: Record<string, boolean>, id: string) {
   return branchOpen[id] !== false;
