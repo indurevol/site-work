@@ -81,7 +81,9 @@ export function BookingDialog() {
     };
     addBooking(booking);
     setDone(booking);
-    toast("Это заглушка: заявка никуда не отправлена");
+    toast("Это заглушка. Заявка остаётся только в этом браузере и не уходит в салон, на почту или в YClients.", {
+      duration: 8000,
+    });
   }
 
   const today = new Date().toISOString().slice(0, 10);
@@ -94,8 +96,8 @@ export function BookingDialog() {
           <div className="flex items-start justify-between gap-4">
             <div>
               <Dialog.Title className="font-display text-3xl leading-none">Заявка в салон</Dialog.Title>
-              <Dialog.Description className="mt-2 text-sm leading-6 text-muted">
-                Это заглушка. Заявка остаётся только в этом браузере и не уходит в салон, на почту или в YClients.
+              <Dialog.Description className="mt-2 text-sm text-muted">
+                Администратор подтвердит время.
               </Dialog.Description>
             </div>
             <Dialog.Close className="inline-flex size-11 items-center justify-center rounded-full hover:bg-sand" aria-label="Закрыть">
@@ -105,10 +107,10 @@ export function BookingDialog() {
 
           {done ? (
             <div className="mt-6 rounded-3xl bg-sand p-5">
-              <p className="font-display text-2xl">Заявка не отправлена</p>
+              <p className="font-display text-2xl">Готово, {done.name.split(" ")[0]}</p>
               <p className="mt-2 text-sm leading-6">
-                Это заглушка. {done.service}, {branches.find((b) => b.id === done.branchId)?.address}, {done.date} в {done.time}.
-                Салон эту заявку не получит. Запишитесь по телефону или в YClients.
+                {done.service}. {branches.find((b) => b.id === done.branchId)?.address}. {done.date} в {done.time}.
+                Мастер: {done.master}.
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
                 <Button onClick={close}>Хорошо</Button>
