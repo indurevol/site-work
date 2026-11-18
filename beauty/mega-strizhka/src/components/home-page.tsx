@@ -3,25 +3,14 @@ import * as Accordion from "@radix-ui/react-accordion";
 import { ChevronDown, MapPin, Phone, Star } from "lucide-react";
 import { toast } from "sonner";
 import {
-  HOURS,
-  PHONE_ALT,
-  PHONE_ALT_TEL,
-  PHONE_DISPLAY,
-  PHONE_TEL,
-  YCLIENTS,
   alsoInNetwork,
-  branches,
   categoryMeta,
-  faqs,
   formatMarks,
-  prices,
-  promos,
-  reviews,
-  totalMarks,
   type PriceCategory,
 } from "@/data/salon";
-import { displayPrice, isBranchOpen, useSalon, visibleMasters } from "@/lib/salon-store";
+import { displayPrice, isBranchOpen, useSalon } from "@/lib/salon-store";
 import { postReview } from "@/lib/salon-api";
+import { mergeBranches, mergeFaqs, mergeMasters, mergePrices, mergePromos, mergeReviews, siteContacts } from "@/lib/catalog";
 import { Button, Field, Rise, Stars, fieldClass } from "@/components/ui";
 import { asset, cn } from "@/lib/cn";
 
@@ -37,28 +26,47 @@ export function HomePage() {
   const branchOpen = useSalon((s) => s.branchOpen);
   const extraMasters = useSalon((s) => s.extraMasters);
   const hiddenMasterIds = useSalon((s) => s.hiddenMasterIds);
-  const shownMasters = visibleMasters(extraMasters, hiddenMasterIds);
+  const masterEdits = useSalon((s) => s.masterEdits);
+  const branchEdits = useSalon((s) => s.branchEdits);
+  const extraBranches = useSalon((s) => s.extraBranches);
+  const hiddenBranchIds = useSalon((s) => s.hiddenBranchIds);
+  const priceEdits = useSalon((s) => s.priceEdits);
+  const extraPrices = useSalon((s) => s.extraPrices);
+  const promoEdits = useSalon((s) => s.promoEdits);
+  const extraPromos = useSalon((s) => s.extraPromos);
+  const reviewEdits = useSalon((s) => s.reviewEdits);
+  const faqEdits = useSalon((s) => s.faqEdits);
+  const extraFaqs = useSalon((s) => s.extraFaqs);
+  const hiddenFaqIds = useSalon((s) => s.hiddenFaqIds);
+  const siteInfo = useSalon((s) => s.siteInfo);
   const promosOn = useSalon((s) => s.promosOn);
+  const contacts = siteContacts(siteInfo);
+  const shownBranches = mergeBranches(branchEdits, extraBranches, hiddenBranchIds);
+  const shownMasters = mergeMasters(masterEdits, extraMasters, hiddenMasterIds);
+  const shownReviews = mergeReviews(reviewEdits);
+  const shownFaqs = mergeFaqs(faqEdits, extraFaqs, hiddenFaqIds);
+  const priceList = mergePrices(priceEdits, extraPrices, priceOverrides, hiddenPriceIds);
+  const activePromos = mergePromos(promoEdits, extraPromos, [], promosOn);
+  const marksTotal = shownBranches.reduce((sum, b) => sum + b.marks, 0);
 
   const [cat, setCat] = useState<PriceCategory>("cut");
   const [query, setQuery] = useState("");
   const [branchFilter, setBranchFilter] = useState("all");
   const [author, setAuthor] = useState("");
   const [text, setText] = useState("");
-  const [reviewBranch, setReviewBranch] = useState(branches[0].id);
+  const [reviewBranch, setReviewBranch] = useState(shownBranches[0]?.id ?? "krupskoy");
   const [stars, setStars] = useState(5);
 
   const list = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return prices.filter((item) => {
-      if (hiddenPriceIds.includes(item.id)) return false;
+    return priceList.filter((item) => {
       if (item.category !== cat) return false;
       if (!q) return true;
       return item.name.toLowerCase().includes(q);
     });
-  }, [cat, query, hiddenPriceIds]);
+  }, [cat, query, priceList]);
 
-  const shownReviews = reviews.filter((r) => {
+  const visibleReviews = shownReviews.filter((r) => {
     if (hiddenReviewIds.includes(r.id)) return false;
     if (branchFilter !== "all" && r.branchId !== branchFilter) return false;
     return true;
@@ -66,7 +74,6 @@ export function HomePage() {
   const publishedGuest = guestReviews.filter(
     (r) => r.status === "published" && (branchFilter === "all" || r.branchId === branchFilter),
   );
-  const activePromos = promos.filter((p) => promosOn[p.id] !== false);
 
   async function sendReview() {
     if (author.trim().length < 2 || text.trim().length < 8) {
@@ -93,12 +100,12 @@ export function HomePage() {
     <div>
       <section className="mx-auto grid max-w-6xl items-center gap-10 px-4 py-12 md:grid-cols-12 md:px-6 md:py-16">
         <div className="soft-in md:col-span-6">
-          <p className="text-sm font-semibold tracking-wide text-copper-deep">Сеть из шести салонов</p>
+          <p className="text-sm font-semibold tracking-wide text-copper-deep">Сеть из {shownBranches.length} салонов</p>
           <h1 className="mt-3 font-display text-5xl leading-none font-medium md:text-7xl">
             Стрижка и цвет рядом с домом, до девяти вечера
           </h1>
           <p className="mt-5 max-w-md text-base leading-7 text-muted">
-            Ежедневно {HOURS.replace("Ежедневно ", "")}. Короткая стрижка от 300 ₽, модельная — от 800 ₽.
+            Ежедневно {contacts.hours.replace("Ежедневно ", "")}. Короткая стрижка от 300 ₽, модельная — от 800 ₽.
           </p>
           <div className="mt-7 flex flex-wrap gap-3">
             <Button onClick={() => openBooking()}>Оставить заявку</Button>
@@ -108,7 +115,7 @@ export function HomePage() {
           </div>
           <p className="mt-4 text-sm text-muted">
             Или сразу{" "}
-            <a className="underline decoration-line underline-offset-4 hover:text-ink" href={YCLIENTS} target="_blank" rel="noreferrer">
+            <a className="underline decoration-line underline-offset-4 hover:text-ink" href={contacts.yclients} target="_blank" rel="noreferrer">
               записаться в YClients
             </a>
           </p>
@@ -122,7 +129,7 @@ export function HomePage() {
             />
             <div className="absolute right-4 bottom-4 left-4 rounded-2xl bg-surface/95 p-4 md:right-auto md:w-64">
               <p className="font-display text-4xl leading-none">4,8</p>
-              <p className="mt-1 text-sm text-muted">{formatMarks(totalMarks)} оценок по шести карточкам 2ГИС</p>
+              <p className="mt-1 text-sm text-muted">{formatMarks(marksTotal)} оценок по карточкам 2ГИС</p>
             </div>
           </div>
         </div>
@@ -130,8 +137,8 @@ export function HomePage() {
 
       <section className="mx-auto grid max-w-6xl gap-px overflow-hidden rounded-3xl border border-line bg-line px-0 md:grid-cols-4">
         {[
-          ["6", "салонов в Перми"],
-          [formatMarks(totalMarks), "оценок в 2ГИС"],
+          [String(shownBranches.length), "салонов в Перми"],
+          [formatMarks(marksTotal), "оценок в 2ГИС"],
           ["09–21", "без выходных"],
           ["300 ₽", "нижняя цена стрижки"],
         ].map(([n, label]) => (
@@ -251,7 +258,7 @@ export function HomePage() {
               <h3 className="mt-4 font-display text-3xl">{m.name}</h3>
               <p className="text-sm font-semibold text-copper-deep">{m.role}</p>
               <p className="mt-2 text-sm text-muted">
-                {m.branches.map((id) => branches.find((b) => b.id === id)?.title).join(" · ")}
+                {m.branches.map((id) => shownBranches.find((b) => b.id === id)?.title).join(" · ")}
               </p>
               <p className="mt-3 text-sm leading-6">{m.note}</p>
               <button className="mt-4 text-sm font-semibold" onClick={() => openBooking({ branchId: m.branches[0] })}>
@@ -269,7 +276,7 @@ export function HomePage() {
             <FilterChip active={branchFilter === "all"} onClick={() => setBranchFilter("all")}>
               Все
             </FilterChip>
-            {branches.map((b) => (
+            {shownBranches.map((b) => (
               <FilterChip key={b.id} active={branchFilter === b.id} onClick={() => setBranchFilter(b.id)}>
                 {b.title}
               </FilterChip>
@@ -277,13 +284,13 @@ export function HomePage() {
           </div>
         </div>
         <div className="mt-6 grid gap-4 md:grid-cols-2">
-          {shownReviews.map((r) => (
+          {visibleReviews.map((r) => (
             <figure key={r.id} className="rounded-3xl border border-line bg-surface p-5">
               <Stars />
               <blockquote className="mt-3 text-base leading-7">{r.text}</blockquote>
               <figcaption className="mt-4 text-sm text-muted">
                 {r.author}
-                {r.master ? ` · мастер ${r.master}` : ""} · {branches.find((b) => b.id === r.branchId)?.address} · {r.source}
+                {r.master ? ` · мастер ${r.master}` : ""} · {shownBranches.find((b) => b.id === r.branchId)?.address} · {r.source}
               </figcaption>
             </figure>
           ))}
@@ -292,11 +299,11 @@ export function HomePage() {
               <Stars value={r.stars} />
               <blockquote className="mt-3 leading-7">{r.text}</blockquote>
               <figcaption className="mt-4 text-sm text-muted">
-                {r.author} · {branches.find((b) => b.id === r.branchId)?.address} · с сайта
+                {r.author} · {shownBranches.find((b) => b.id === r.branchId)?.address} · с сайта
               </figcaption>
             </figure>
           ))}
-          {shownReviews.length + publishedGuest.length === 0 && (
+          {visibleReviews.length + publishedGuest.length === 0 && (
             <p className="text-sm text-muted">По этому салону отзывов пока нет. Посмотрите «Все» или карточку в 2ГИС.</p>
           )}
         </div>
@@ -317,7 +324,7 @@ export function HomePage() {
           </Field>
           <Field label="Салон">
             <select className={fieldClass} value={reviewBranch} onChange={(e) => setReviewBranch(e.target.value)}>
-              {branches.map((b) => (
+              {shownBranches.map((b) => (
                 <option key={b.id} value={b.id}>
                   {b.address}
                 </option>
@@ -347,10 +354,10 @@ export function HomePage() {
         <div className="mx-auto max-w-6xl px-4 py-16 md:px-6">
           <h2 className="font-display text-4xl text-surface md:text-5xl">Шесть адресов, один телефон</h2>
           <p className="mt-3 max-w-xl text-sm leading-6 text-sand">
-            {PHONE_DISPLAY}. Дополнительный номер с карточки: {PHONE_ALT}. {HOURS}.
+            {contacts.phone}. Дополнительный номер с карточки: {contacts.phoneAlt}. {contacts.hours}.
           </p>
           <div className="mt-8 grid gap-4 md:grid-cols-2">
-            {branches.map((b) => {
+            {shownBranches.map((b) => {
               const open = isBranchOpen(branchOpen, b.id);
               return (
                 <article key={b.id} className="rounded-3xl bg-ink p-5 ring-1 ring-sand/30">
@@ -376,7 +383,7 @@ export function HomePage() {
                     <a className="inline-flex min-h-11 items-center rounded-full bg-surface px-4 text-sm font-semibold text-ink" href={b.map} target="_blank" rel="noreferrer">
                       Маршрут
                     </a>
-                    <a className="inline-flex min-h-11 items-center gap-2 rounded-full px-3 text-sm text-sand" href={`tel:${PHONE_TEL}`}>
+                    <a className="inline-flex min-h-11 items-center gap-2 rounded-full px-3 text-sm text-sand" href={`tel:${contacts.phoneTel}`}>
                       <Phone className="size-4" />
                       Позвонить
                     </a>
@@ -385,8 +392,8 @@ export function HomePage() {
               );
             })}
           </div>
-          <a className="mt-6 inline-flex text-sm text-sand underline underline-offset-4" href={`tel:${PHONE_ALT_TEL}`}>
-            Второй телефон: {PHONE_ALT}
+          <a className="mt-6 inline-flex text-sm text-sand underline underline-offset-4" href={`tel:${contacts.phoneAltTel}`}>
+            Второй телефон: {contacts.phoneAlt}
           </a>
         </div>
       </section>
@@ -394,8 +401,8 @@ export function HomePage() {
       <section id="faq" className="mx-auto max-w-6xl px-4 py-16 md:px-6">
         <h2 className="font-display text-4xl">Коротко о главном</h2>
         <Accordion.Root type="single" collapsible className="mt-6 divide-y divide-line border-y border-line">
-          {faqs.map((item) => (
-            <Accordion.Item key={item.q} value={item.q}>
+          {shownFaqs.map((item) => (
+            <Accordion.Item key={item.id} value={item.id}>
               <Accordion.Header>
                 <Accordion.Trigger className="group flex min-h-14 w-full items-center justify-between gap-4 py-3 text-left text-base font-semibold">
                   {item.q}

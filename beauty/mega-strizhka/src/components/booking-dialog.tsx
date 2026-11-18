@@ -2,14 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 import { toast } from "sonner";
-import {
-  YCLIENTS,
-  branches,
-  prices,
-  times,
-} from "@/data/salon";
-import { isBranchOpen, useSalon, visibleMasters, type Booking } from "@/lib/salon-store";
+import { times } from "@/data/salon";
+import { isBranchOpen, useSalon, type Booking } from "@/lib/salon-store";
 import { postBooking } from "@/lib/salon-api";
+import { mergeBranches, mergeMasters, mergePrices, siteContacts } from "@/lib/catalog";
 import { Button, Field, fieldClass } from "@/components/ui";
 
 const steps = ["Услуга", "Салон", "Время", "Контакты"];
@@ -24,6 +20,17 @@ export function BookingDialog() {
   const addBooking = useSalon((s) => s.addBooking);
   const extraMasters = useSalon((s) => s.extraMasters);
   const hiddenMasterIds = useSalon((s) => s.hiddenMasterIds);
+  const masterEdits = useSalon((s) => s.masterEdits);
+  const branchEdits = useSalon((s) => s.branchEdits);
+  const extraBranches = useSalon((s) => s.extraBranches);
+  const hiddenBranchIds = useSalon((s) => s.hiddenBranchIds);
+  const priceEdits = useSalon((s) => s.priceEdits);
+  const extraPrices = useSalon((s) => s.extraPrices);
+  const priceOverrides = useSalon((s) => s.priceOverrides);
+  const siteInfo = useSalon((s) => s.siteInfo);
+  const contacts = siteContacts(siteInfo);
+  const branches = mergeBranches(branchEdits, extraBranches, hiddenBranchIds);
+  const prices = mergePrices(priceEdits, extraPrices, priceOverrides, hiddenPriceIds);
 
   const [step, setStep] = useState(0);
   const [service, setService] = useState(presetService);
@@ -48,12 +55,12 @@ export function BookingDialog() {
 
   const visiblePrices = useMemo(
     () => prices.filter((p) => !hiddenPriceIds.includes(p.id)),
-    [hiddenPriceIds],
+    [prices],
   );
   const openBranches = branches.filter((b) => isBranchOpen(branchOpen, b.id));
   const masterOptions = [
     "Любой свободный",
-    ...visibleMasters(extraMasters, hiddenMasterIds)
+    ...mergeMasters(masterEdits, extraMasters, hiddenMasterIds)
       .filter((m) => m.branches.includes(branchId))
       .map((m) => m.name),
   ];
@@ -119,7 +126,7 @@ export function BookingDialog() {
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
                 <Button onClick={close}>Хорошо</Button>
-                <a href={YCLIENTS} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center rounded-full border border-line bg-surface px-5 text-sm font-semibold">
+                <a href={contacts.yclients} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center rounded-full border border-line bg-surface px-5 text-sm font-semibold">
                   Открыть YClients
                 </a>
               </div>
@@ -222,7 +229,7 @@ export function BookingDialog() {
                 ) : (
                   <Button onClick={submit}>Отправить заявку</Button>
                 )}
-                <a href={YCLIENTS} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center px-3 text-sm text-muted hover:text-ink">
+                <a href={contacts.yclients} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center px-3 text-sm text-muted hover:text-ink">
                   Уже есть окно в YClients
                 </a>
               </div>

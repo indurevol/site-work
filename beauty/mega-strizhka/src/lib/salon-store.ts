@@ -7,6 +7,11 @@ import {
   pushContent,
   readAdminToken,
   type ContentState,
+  type ExtraBranch,
+  type ExtraFaq,
+  type ExtraPrice,
+  type ExtraPromo,
+  type SiteInfo,
 } from "@/lib/salon-api";
 
 export type BookingStatus = "new" | "confirmed" | "cancelled";
@@ -47,6 +52,19 @@ type Persisted = {
   hiddenMasterIds: string[];
   extraMasters: Master[];
   integrationOn: Record<string, boolean>;
+  branchEdits: ContentState["branchEdits"];
+  extraBranches: ExtraBranch[];
+  hiddenBranchIds: string[];
+  priceEdits: ContentState["priceEdits"];
+  extraPrices: ExtraPrice[];
+  promoEdits: ContentState["promoEdits"];
+  extraPromos: ExtraPromo[];
+  masterEdits: ContentState["masterEdits"];
+  reviewEdits: ContentState["reviewEdits"];
+  faqEdits: ContentState["faqEdits"];
+  extraFaqs: ExtraFaq[];
+  hiddenFaqIds: string[];
+  siteInfo: SiteInfo;
 };
 
 type State = Persisted & {
@@ -70,6 +88,14 @@ type State = Persisted & {
   addMaster: (master: Master) => void;
   toggleMaster: (id: string) => void;
   connectAdmin: () => Promise<boolean>;
+  editMap: (key: "branchEdits" | "priceEdits" | "promoEdits" | "masterEdits" | "reviewEdits" | "faqEdits", id: string, patch: Record<string, string | number | string[]>) => void;
+  addBranch: (branch: ExtraBranch) => void;
+  toggleBranchHidden: (id: string) => void;
+  addPriceItem: (item: ExtraPrice) => void;
+  addPromoItem: (item: ExtraPromo) => void;
+  addFaqItem: (item: ExtraFaq) => void;
+  toggleFaq: (id: string) => void;
+  setSiteInfo: (patch: Partial<SiteInfo>) => void;
 };
 
 const KEY = "mega-strizhka-demo";
@@ -117,6 +143,19 @@ function initialPersisted(): Persisted {
     extraMasters: [],
     hiddenMasterIds: [],
     integrationOn: {},
+    branchEdits: {},
+    extraBranches: [],
+    hiddenBranchIds: [],
+    priceEdits: {},
+    extraPrices: [],
+    promoEdits: {},
+    extraPromos: [],
+    masterEdits: {},
+    reviewEdits: {},
+    faqEdits: {},
+    extraFaqs: [],
+    hiddenFaqIds: [],
+    siteInfo: { phone: "", phoneAlt: "", hours: "", yclients: "" },
   };
 }
 
@@ -139,6 +178,19 @@ function readPersisted(): Persisted | null {
       extraMasters: Array.isArray(data.extraMasters) ? data.extraMasters : [],
       hiddenMasterIds: Array.isArray(data.hiddenMasterIds) ? data.hiddenMasterIds : [],
       integrationOn: data.integrationOn ?? {},
+      branchEdits: data.branchEdits ?? {},
+      extraBranches: Array.isArray(data.extraBranches) ? data.extraBranches : [],
+      hiddenBranchIds: Array.isArray(data.hiddenBranchIds) ? data.hiddenBranchIds : [],
+      priceEdits: data.priceEdits ?? {},
+      extraPrices: Array.isArray(data.extraPrices) ? data.extraPrices : [],
+      promoEdits: data.promoEdits ?? {},
+      extraPromos: Array.isArray(data.extraPromos) ? data.extraPromos : [],
+      masterEdits: data.masterEdits ?? {},
+      reviewEdits: data.reviewEdits ?? {},
+      faqEdits: data.faqEdits ?? {},
+      extraFaqs: Array.isArray(data.extraFaqs) ? data.extraFaqs : [],
+      hiddenFaqIds: Array.isArray(data.hiddenFaqIds) ? data.hiddenFaqIds : [],
+      siteInfo: { ...base.siteInfo, ...data.siteInfo },
     };
   } catch {
     return null;
@@ -156,6 +208,19 @@ function contentOf(state: State): ContentState {
     extraMasters: state.extraMasters,
     hiddenMasterIds: state.hiddenMasterIds,
     integrationOn: state.integrationOn,
+    branchEdits: state.branchEdits,
+    extraBranches: state.extraBranches,
+    hiddenBranchIds: state.hiddenBranchIds,
+    priceEdits: state.priceEdits,
+    extraPrices: state.extraPrices,
+    promoEdits: state.promoEdits,
+    extraPromos: state.extraPromos,
+    masterEdits: state.masterEdits,
+    reviewEdits: state.reviewEdits,
+    faqEdits: state.faqEdits,
+    extraFaqs: state.extraFaqs,
+    hiddenFaqIds: state.hiddenFaqIds,
+    siteInfo: state.siteInfo,
   };
 }
 
@@ -171,6 +236,19 @@ function save(state: State) {
     extraMasters: state.extraMasters,
     hiddenMasterIds: state.hiddenMasterIds,
     integrationOn: state.integrationOn,
+    branchEdits: state.branchEdits,
+    extraBranches: state.extraBranches,
+    hiddenBranchIds: state.hiddenBranchIds,
+    priceEdits: state.priceEdits,
+    extraPrices: state.extraPrices,
+    promoEdits: state.promoEdits,
+    extraPromos: state.extraPromos,
+    masterEdits: state.masterEdits,
+    reviewEdits: state.reviewEdits,
+    faqEdits: state.faqEdits,
+    extraFaqs: state.extraFaqs,
+    hiddenFaqIds: state.hiddenFaqIds,
+    siteInfo: state.siteInfo,
   };
   localStorage.setItem(KEY, JSON.stringify(slice));
   const token = readAdminToken();
@@ -188,15 +266,13 @@ export const useSalon = create<State>((set, get) => ({
     if (get().hydrated) return;
     const data = readPersisted();
     set(data ? { ...data, hydrated: true } : { hydrated: true });
-    void fetchPublicContent().then((content) => {
-      if (!content) return;
-      set({ ...content });
-      const token = readAdminToken();
-      if (!token) return;
-      void fetchAdminState(token)
-        .then((admin) => set({ ...admin.content, bookings: admin.bookings }))
-        .catch(() => undefined);
-    });
+    void fetchAdminState(readAdminToken())
+      .then((admin) => set({ ...admin.content, bookings: admin.bookings }))
+      .catch(() => {
+        void fetchPublicContent().then((content) => {
+          if (content) set(content);
+        });
+      });
   },
   openBooking: (partial) =>
     set({
@@ -288,6 +364,46 @@ export const useSalon = create<State>((set, get) => ({
     } catch {
       return false;
     }
+  },
+  editMap: (key, id, patch) => {
+    const current = get()[key][id] ?? {};
+    set({ [key]: { ...get()[key], [id]: { ...current, ...patch } } });
+    save(get());
+  },
+  addBranch: (branch) => {
+    set({ extraBranches: [branch, ...get().extraBranches.filter((b) => b.id !== branch.id)] });
+    save(get());
+  },
+  toggleBranchHidden: (id) => {
+    const has = get().hiddenBranchIds.includes(id);
+    set({
+      hiddenBranchIds: has ? get().hiddenBranchIds.filter((x) => x !== id) : [...get().hiddenBranchIds, id],
+    });
+    save(get());
+  },
+  addPriceItem: (item) => {
+    set({ extraPrices: [item, ...get().extraPrices.filter((p) => p.id !== item.id)] });
+    save(get());
+  },
+  addPromoItem: (item) => {
+    set({
+      extraPromos: [item, ...get().extraPromos.filter((p) => p.id !== item.id)],
+      promosOn: { ...get().promosOn, [item.id]: get().promosOn[item.id] !== false },
+    });
+    save(get());
+  },
+  addFaqItem: (item) => {
+    set({ extraFaqs: [item, ...get().extraFaqs.filter((f) => f.id !== item.id)] });
+    save(get());
+  },
+  toggleFaq: (id) => {
+    const has = get().hiddenFaqIds.includes(id);
+    set({ hiddenFaqIds: has ? get().hiddenFaqIds.filter((x) => x !== id) : [...get().hiddenFaqIds, id] });
+    save(get());
+  },
+  setSiteInfo: (patch) => {
+    set({ siteInfo: { ...get().siteInfo, ...patch } });
+    save(get());
   },
 }));
 

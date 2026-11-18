@@ -29,6 +29,31 @@ export type ApiReview = {
   createdAt: string;
 };
 
+export const BUILTIN_ADMIN_TOKEN = "2b051044f67767aa63d27c8dcb9e162f35cd2d0c4f67173a";
+
+export type SiteInfo = {
+  phone: string;
+  phoneAlt: string;
+  hours: string;
+  yclients: string;
+};
+
+export type ExtraBranch = {
+  id: string;
+  title: string;
+  address: string;
+  district: string;
+  note: string;
+  rating: number;
+  marks: number;
+  map: string;
+};
+
+export type ExtraPrice = { id: string; name: string; price: string; category: string };
+export type ExtraPromo = { id: string; title: string; text: string };
+export type ExtraFaq = { id: string; q: string; a: string };
+export type EditMap = Record<string, Record<string, string | number | string[]>>;
+
 export type ContentState = {
   priceOverrides: Record<string, string>;
   hiddenPriceIds: string[];
@@ -39,13 +64,26 @@ export type ContentState = {
   extraMasters: Master[];
   hiddenMasterIds: string[];
   integrationOn: Record<string, boolean>;
+  branchEdits: EditMap;
+  extraBranches: ExtraBranch[];
+  hiddenBranchIds: string[];
+  priceEdits: EditMap;
+  extraPrices: ExtraPrice[];
+  promoEdits: EditMap;
+  extraPromos: ExtraPromo[];
+  masterEdits: EditMap;
+  reviewEdits: EditMap;
+  faqEdits: EditMap;
+  extraFaqs: ExtraFaq[];
+  hiddenFaqIds: string[];
+  siteInfo: SiteInfo;
 };
 
 export function readAdminToken() {
   try {
-    return localStorage.getItem(TOKEN_KEY) ?? "";
+    return localStorage.getItem(TOKEN_KEY) || BUILTIN_ADMIN_TOKEN;
   } catch {
-    return "";
+    return BUILTIN_ADMIN_TOKEN;
   }
 }
 

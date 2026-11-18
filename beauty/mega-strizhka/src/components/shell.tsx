@@ -1,8 +1,9 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { Menu, Phone, X } from "lucide-react";
-import { HOURS, PHONE_DISPLAY, PHONE_TEL, links } from "@/data/salon";
+import { links } from "@/data/salon";
 import { useSalon } from "@/lib/salon-store";
+import { siteContacts } from "@/lib/catalog";
 import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui";
 import { BookingDialog } from "@/components/booking-dialog";
@@ -10,6 +11,8 @@ import { BookingDialog } from "@/components/booking-dialog";
 export function Shell({ children }: { children: ReactNode }) {
   const openBooking = useSalon((s) => s.openBooking);
   const hydrate = useSalon((s) => s.hydrate);
+  const siteInfo = useSalon((s) => s.siteInfo);
+  const contacts = siteContacts(siteInfo);
   const [open, setOpen] = useState(false);
   const [bar, setBar] = useState(true);
 
@@ -23,7 +26,7 @@ export function Shell({ children }: { children: ReactNode }) {
         {bar && (
           <div className="shrink-0 bg-ink text-surface">
             <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-3 gap-y-1 px-4 py-2 text-xs md:px-6 md:text-sm">
-              <p className="min-w-0">Пермь · 6 салонов · {HOURS}</p>
+              <p className="min-w-0">Пермь · {contacts.hours}</p>
               <button
                 className="min-h-11 shrink-0 px-2 text-sand"
                 onClick={() => setBar(false)}
@@ -56,11 +59,11 @@ export function Shell({ children }: { children: ReactNode }) {
           </nav>
           <div className="ml-auto flex items-center gap-2">
             <a
-              href={`tel:${PHONE_TEL}`}
+              href={`tel:${contacts.phoneTel}`}
               className="hidden items-center gap-2 text-sm font-semibold sm:inline-flex"
             >
               <Phone className="size-4 text-copper" />
-              {PHONE_DISPLAY}
+              {contacts.phone}
             </a>
             <Button className="hidden sm:inline-flex" onClick={() => openBooking()}>
               Записаться
@@ -98,8 +101,8 @@ export function Shell({ children }: { children: ReactNode }) {
             <Link to="/admin" className="min-h-11 rounded-2xl px-3 py-3" onClick={() => setOpen(false)}>
               Админ
             </Link>
-            <a href={`tel:${PHONE_TEL}`} className="min-h-11 rounded-2xl px-3 py-3 font-semibold">
-              {PHONE_DISPLAY}
+            <a href={`tel:${contacts.phoneTel}`} className="min-h-11 rounded-2xl px-3 py-3 font-semibold">
+              {contacts.phone}
             </a>
             <Button
               className="w-full"
