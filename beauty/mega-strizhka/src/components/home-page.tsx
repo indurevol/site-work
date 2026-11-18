@@ -133,7 +133,7 @@ export function HomePage() {
           <div className="relative">
             <img
               src={asset("/photos/salon.jpg")}
-              alt="Зал салона: два кресла и зеркало"
+              alt="Мужчина и женщина после стрижки в зале с оранжевой стеной"
               className="aspect-[3/2] w-full rounded-3xl object-cover"
             />
             <div className="absolute right-4 bottom-4 left-4 rounded-2xl bg-surface/95 p-4 md:right-auto md:w-64">
@@ -144,21 +144,7 @@ export function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto grid max-w-6xl gap-px overflow-hidden rounded-3xl border border-line bg-line px-0 md:grid-cols-4">
-        {[
-          [String(shownBranches.length), "салонов в Перми"],
-          [formatMarks(marksTotal), "оценок в 2ГИС"],
-          ["09–21", "без выходных"],
-          ["300 ₽", "нижняя цена стрижки"],
-        ].map(([n, label]) => (
-          <div key={label} className="bg-paper px-5 py-6">
-            <p className="font-display text-4xl">{n}</p>
-            <p className="mt-1 text-sm text-muted">{label}</p>
-          </div>
-        ))}
-      </section>
-
-      <section id="services" className="scroll-mt-24 mx-auto max-w-6xl px-4 py-16 md:px-6">
+      <section id="services" className="scroll-mt-24 mx-auto max-w-6xl px-4 py-10 md:px-6 md:py-14">
         <Rise>
           <h2 className="font-display text-4xl md:text-5xl">Четыре повода зайти</h2>
           <p className="mt-3 max-w-xl text-muted">Стрижка, цвет, сложное окрашивание и маникюр.</p>
@@ -180,6 +166,22 @@ export function HomePage() {
                 </div>
               </a>
             </Rise>
+          ))}
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-4 pb-2 md:px-6">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {[
+            [String(shownBranches.length), "салонов в Перми"],
+            [formatMarks(marksTotal), "оценок в 2ГИС"],
+            ["09–21", "без выходных"],
+            ["300 ₽", "стрижка от"],
+          ].map(([n, label]) => (
+            <div key={label} className="rounded-2xl border border-line bg-surface px-3 py-3 text-center">
+              <p className="font-brand text-xl leading-none font-bold text-copper">{n}</p>
+              <p className="mt-1 text-xs leading-4 text-muted">{label}</p>
+            </div>
           ))}
         </div>
       </section>
