@@ -42,7 +42,9 @@ export function Shell({ children }: { children: ReactNode }) {
         <div className="shrink-0">
           <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3 md:px-6">
           <Link to="/" className="min-w-0 leading-none">
-            <span className="font-display text-2xl font-semibold tracking-tight">МЕГАстрижка</span>
+            <span className="font-brand text-[1.35rem] leading-none font-extrabold tracking-tight sm:text-2xl">
+              <span className="text-copper">МЕГА</span>стрижка
+            </span>
             <span className="mt-1 block text-xs text-muted">салоны в Перми</span>
           </Link>
           <nav className="ml-6 hidden items-center gap-1 lg:flex">
@@ -122,7 +124,9 @@ export function Shell({ children }: { children: ReactNode }) {
       <footer className="mt-8 border-t border-line">
         <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 md:grid-cols-3 md:px-6">
           <div>
-            <p className="font-display text-3xl">МЕГАстрижка</p>
+            <p className="font-brand text-2xl font-extrabold tracking-tight">
+              <span className="text-copper">МЕГА</span>стрижка
+            </p>
             <p className="mt-2 max-w-xs text-sm leading-6 text-muted">
               Сеть парикмахерских в Перми. Шесть адресов, ежедневно с 9:00 до 21:00.
             </p>

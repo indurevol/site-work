@@ -107,11 +107,12 @@ export function HomePage() {
       <section className="mx-auto grid max-w-6xl items-center gap-10 px-4 py-12 md:grid-cols-12 md:px-6 md:py-16">
         <div className="soft-in md:col-span-6">
           <p className="text-sm font-semibold tracking-wide text-copper-deep">Сеть из {shownBranches.length} салонов</p>
-          <h1 className="mt-3 font-display text-5xl leading-none font-medium md:text-7xl">
-            Стрижка и цвет рядом с домом, до девяти вечера
+          <h1 className="mt-4 font-brand text-[2.15rem] leading-[1.05] font-extrabold tracking-tight sm:text-5xl md:text-6xl">
+            Стрижка и цвет
+            <span className="mt-2 block text-[1.35rem] leading-tight font-bold text-copper sm:text-3xl">Просто профессионально</span>
           </h1>
           <p className="mt-5 max-w-md text-base leading-7 text-muted">
-            Ежедневно {contacts.hours.replace("Ежедневно ", "")}. Короткая стрижка от 300 ₽, модельная — от 800 ₽.
+            Ежедневно {contacts.hours.replace("Ежедневно ", "")}. Короткая стрижка от 300 ₽.
           </p>
           <div className="mt-7 flex flex-wrap gap-3">
             <Button className="cta-pop min-h-12 px-6 text-base" onClick={() => openBooking()}>

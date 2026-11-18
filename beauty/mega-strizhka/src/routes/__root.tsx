@@ -13,7 +13,7 @@ export const Route = createRootRoute({
       {
         name: "description",
         content:
-          "Сеть парикмахерских в Перми: шесть адресов, ежедневно до 21:00. Стрижки, окрашивание, маникюр.",
+          "Стрижка и цвет. Просто профессионально. Сеть салонов МЕГАстрижка в Перми.",
       },
       { name: "theme-color", content: "#f3eee6" },
     ],
@@ -26,7 +26,7 @@ export const Route = createRootRoute({
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Manrope:wght@400;500;600;700&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Manrope:wght@400;500;600;700&family=Unbounded:wght@700;800&display=swap",
       },
     ],
   }),

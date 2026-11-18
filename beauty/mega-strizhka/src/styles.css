@@ -3,6 +3,7 @@
 @theme {
   --font-sans: "Manrope", system-ui, sans-serif;
   --font-display: "Cormorant Garamond", Georgia, serif;
+  --font-brand: "Unbounded", Manrope, sans-serif;
   --color-paper: #f3eee6;
   --color-surface: #fbf8f3;
   --color-ink: #241c18;
