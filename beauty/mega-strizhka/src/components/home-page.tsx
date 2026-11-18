@@ -1,6 +1,6 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useRef, useState, type ReactNode } from "react";
 import * as Accordion from "@radix-ui/react-accordion";
-import { ChevronDown, MapPin, Phone, Star } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, MapPin, Phone, Star } from "lucide-react";
 import { toast } from "sonner";
 import {
   alsoInNetwork,
@@ -57,6 +57,7 @@ export function HomePage() {
 
   const [cat, setCat] = useState<PriceCategory>("cut");
   const [query, setQuery] = useState("");
+  const reviewsRef = useRef<HTMLDivElement>(null);
   const [branchFilter, setBranchFilter] = useState("all");
   const [author, setAuthor] = useState("");
   const [text, setText] = useState("");
@@ -294,29 +295,62 @@ export function HomePage() {
             ))}
           </div>
         </div>
-        <div className="mt-6 grid gap-4 md:grid-cols-2">
-          {visibleReviews.map((r) => (
-            <figure key={r.id} className="rounded-3xl border border-line bg-surface p-5">
-              <Stars />
-              <blockquote className="mt-3 text-base leading-7">{r.text}</blockquote>
-              <figcaption className="mt-4 text-sm text-muted">
-                {r.author}
-                {r.master ? ` · мастер ${r.master}` : ""} · {shownBranches.find((b) => b.id === r.branchId)?.address} · {r.source}
-              </figcaption>
-            </figure>
-          ))}
-          {publishedGuest.map((r) => (
-            <figure key={r.id} className="rounded-3xl border border-line bg-surface p-5">
-              <Stars value={r.stars} />
-              <blockquote className="mt-3 leading-7">{r.text}</blockquote>
-              <figcaption className="mt-4 text-sm text-muted">
-                {r.author} · {shownBranches.find((b) => b.id === r.branchId)?.address} · с сайта
-              </figcaption>
-            </figure>
-          ))}
-          {visibleReviews.length + publishedGuest.length === 0 && (
-            <p className="text-sm text-muted">По этому салону отзывов пока нет. Посмотрите «Все» или карточку в 2ГИС.</p>
-          )}
+        <div className="mt-6">
+          <div className="mb-3 flex justify-end gap-2">
+            <button
+              type="button"
+              aria-label="Предыдущие отзывы"
+              className="inline-flex size-11 items-center justify-center rounded-full border border-line bg-surface"
+              onClick={() => reviewsRef.current?.scrollBy({ left: -reviewsRef.current.clientWidth * 0.85, behavior: "smooth" })}
+            >
+              <ChevronLeft className="size-5" />
+            </button>
+            <button
+              type="button"
+              aria-label="Следующие отзывы"
+              className="inline-flex size-11 items-center justify-center rounded-full border border-line bg-surface"
+              onClick={() => reviewsRef.current?.scrollBy({ left: reviewsRef.current.clientWidth * 0.85, behavior: "smooth" })}
+            >
+              <ChevronRight className="size-5" />
+            </button>
+          </div>
+          <div
+            ref={reviewsRef}
+            className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          >
+            {visibleReviews.map((r) => (
+              <figure key={r.id} className="w-[86%] shrink-0 snap-start rounded-3xl border border-line bg-surface p-5 sm:w-[48%] lg:w-[32%]">
+                <Stars />
+                <blockquote className="mt-3 text-base leading-7">{r.text}</blockquote>
+                <figcaption className="mt-4 text-sm text-muted">
+                  {r.author}
+                  {r.master ? ` · мастер ${r.master}` : ""} · {shownBranches.find((b) => b.id === r.branchId)?.address} · {r.source}
+                </figcaption>
+              </figure>
+            ))}
+            {publishedGuest.map((r) => (
+              <figure key={r.id} className="w-[86%] shrink-0 snap-start rounded-3xl border border-line bg-surface p-5 sm:w-[48%] lg:w-[32%]">
+                <Stars value={r.stars} />
+                <blockquote className="mt-3 leading-7">{r.text}</blockquote>
+                <figcaption className="mt-4 text-sm text-muted">
+                  {r.author} · {shownBranches.find((b) => b.id === r.branchId)?.address} · с сайта
+                </figcaption>
+              </figure>
+            ))}
+            {visibleReviews.length + publishedGuest.length === 0 && (
+              <p className="text-sm text-muted">По этому салону отзывов пока нет. Посмотрите «Все» или карточку в 2ГИС.</p>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-6 flex flex-col items-start justify-between gap-4 rounded-3xl bg-copper px-5 py-5 sm:flex-row sm:items-center">
+          <div>
+            <p className="font-display text-2xl text-ink">Понравилось — записывайтесь</p>
+            <p className="mt-1 text-sm text-ink/80">Салон, услуга и мастер. Ответим и подтвердим время.</p>
+          </div>
+          <Button className="bg-ink text-surface hover:bg-ink/90" onClick={() => openBooking()}>
+            Записаться
+          </Button>
         </div>
 
         <form
