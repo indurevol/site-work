@@ -23,7 +23,7 @@ import {
 } from "@/data/salon";
 import { displayPrice, isBranchOpen, useSalon } from "@/lib/salon-store";
 import { Button, Field, Rise, Stars, fieldClass } from "@/components/ui";
-import { cn } from "@/lib/cn";
+import { asset, cn } from "@/lib/cn";
 
 const cats: PriceCategory[] = ["cut", "color", "complex", "nails"];
 
@@ -111,7 +111,7 @@ export function HomePage() {
         <div className="soft-in md:col-span-6" style={{ animationDelay: "120ms" }}>
           <div className="relative">
             <img
-              src="/photos/salon.jpg"
+              src={asset("/photos/salon.jpg")}
               alt="Зал салона: два кресла и зеркало"
               className="aspect-[3/2] w-full rounded-3xl object-cover"
             />
@@ -144,10 +144,10 @@ export function HomePage() {
         </Rise>
         <div className="mt-8 grid gap-4 md:grid-cols-2">
           {[
-            { cat: "cut" as const, img: "/photos/tools.jpg", alt: "Ножницы и гребень на льне" },
-            { cat: "color" as const, img: "/photos/hair.jpg", alt: "Пряди пшеничного, медового и каштанового оттенка" },
-            { cat: "complex" as const, img: "/photos/hair.jpg", alt: "Фактура волос крупным планом" },
-            { cat: "nails" as const, img: "/photos/nails.jpg", alt: "Два флакона лака и апельсиновая палочка" },
+            { cat: "cut" as const, img: asset("/photos/tools.jpg"), alt: "Ножницы и гребень на льне" },
+            { cat: "color" as const, img: asset("/photos/hair.jpg"), alt: "Пряди пшеничного, медового и каштанового оттенка" },
+            { cat: "complex" as const, img: asset("/photos/hair.jpg"), alt: "Фактура волос крупным планом" },
+            { cat: "nails" as const, img: asset("/photos/nails.jpg"), alt: "Два флакона лака и апельсиновая палочка" },
           ].map((card, i) => (
             <Rise key={card.cat + i} delay={i * 80} className="overflow-hidden rounded-3xl border border-line bg-surface">
               <a href="#prices" onClick={() => setCat(card.cat)} className="grid sm:grid-cols-5">

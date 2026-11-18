@@ -41,16 +41,16 @@ export function Shell({ children }: { children: ReactNode }) {
             <span className="mt-1 block text-xs text-muted">салоны в Перми</span>
           </Link>
           <nav className="ml-6 hidden items-center gap-1 lg:flex">
-            <a href="/#services" className="rounded-full px-3 py-2 text-sm text-ink hover:bg-sand">
+            <a href={`${import.meta.env.BASE_URL}#services`} className="rounded-full px-3 py-2 text-sm text-ink hover:bg-sand">
               Услуги
             </a>
-            <a href="/#prices" className="rounded-full px-3 py-2 text-sm text-ink hover:bg-sand">
+            <a href={`${import.meta.env.BASE_URL}#prices`} className="rounded-full px-3 py-2 text-sm text-ink hover:bg-sand">
               Цены
             </a>
-            <a href="/#reviews" className="rounded-full px-3 py-2 text-sm text-ink hover:bg-sand">
+            <a href={`${import.meta.env.BASE_URL}#reviews`} className="rounded-full px-3 py-2 text-sm text-ink hover:bg-sand">
               Отзывы
             </a>
-            <a href="/#salons" className="rounded-full px-3 py-2 text-sm text-ink hover:bg-sand">
+            <a href={`${import.meta.env.BASE_URL}#salons`} className="rounded-full px-3 py-2 text-sm text-ink hover:bg-sand">
               Салоны
             </a>
           </nav>
@@ -83,16 +83,16 @@ export function Shell({ children }: { children: ReactNode }) {
         </div>
         <div className={cn("min-h-0 overflow-y-auto border-line bg-paper lg:hidden", open ? "flex-1 border-t" : "hidden")}>
           <div className="flex flex-col gap-1 px-4 py-3">
-            <a href="/#services" className="min-h-11 rounded-2xl px-3 py-3" onClick={() => setOpen(false)}>
+            <a href={`${import.meta.env.BASE_URL}#services`} className="min-h-11 rounded-2xl px-3 py-3" onClick={() => setOpen(false)}>
               Услуги
             </a>
-            <a href="/#prices" className="min-h-11 rounded-2xl px-3 py-3" onClick={() => setOpen(false)}>
+            <a href={`${import.meta.env.BASE_URL}#prices`} className="min-h-11 rounded-2xl px-3 py-3" onClick={() => setOpen(false)}>
               Цены
             </a>
-            <a href="/#reviews" className="min-h-11 rounded-2xl px-3 py-3" onClick={() => setOpen(false)}>
+            <a href={`${import.meta.env.BASE_URL}#reviews`} className="min-h-11 rounded-2xl px-3 py-3" onClick={() => setOpen(false)}>
               Отзывы
             </a>
-            <a href="/#salons" className="min-h-11 rounded-2xl px-3 py-3" onClick={() => setOpen(false)}>
+            <a href={`${import.meta.env.BASE_URL}#salons`} className="min-h-11 rounded-2xl px-3 py-3" onClick={() => setOpen(false)}>
               Салоны
             </a>
             <Link to="/admin" className="min-h-11 rounded-2xl px-3 py-3" onClick={() => setOpen(false)}>
