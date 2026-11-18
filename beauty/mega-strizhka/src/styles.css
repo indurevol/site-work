@@ -2,7 +2,7 @@
 
 @theme {
   --font-sans: "Manrope", system-ui, sans-serif;
-  --font-display: "Cormorant Garamond", Georgia, serif;
+  --font-display: "Unbounded", Manrope, sans-serif;
   --font-brand: "Unbounded", Manrope, sans-serif;
   --color-paper: #f3eee6;
   --color-surface: #fbf8f3;
@@ -32,6 +32,10 @@
   }
   .site-header {
     max-height: 100dvh;
+  }
+  .font-display {
+    font-weight: 700;
+    letter-spacing: -0.02em;
   }
   ::selection {
     background: #ffe1cf;

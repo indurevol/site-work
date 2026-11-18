@@ -151,10 +151,10 @@ export function HomePage() {
         </Rise>
         <div className="mt-8 grid gap-4 md:grid-cols-2">
           {[
-            { cat: "cut" as const, img: asset("/photos/tools.jpg"), alt: "Ножницы и гребень на льне" },
-            { cat: "color" as const, img: asset("/photos/hair.jpg"), alt: "Пряди пшеничного, медового и каштанового оттенка" },
-            { cat: "complex" as const, img: asset("/photos/hair.jpg"), alt: "Фактура волос крупным планом" },
-            { cat: "nails" as const, img: asset("/photos/nails.jpg"), alt: "Два флакона лака и апельсиновая палочка" },
+            { cat: "cut" as const, img: asset("/photos/cut.jpg"), alt: "Ножницы, расчёска и тарелка" },
+            { cat: "color" as const, img: asset("/photos/color.jpg"), alt: "Пряди пшеничного, медового и каштанового цвета" },
+            { cat: "complex" as const, img: asset("/photos/complex.jpg"), alt: "Локон с переходом от тёмного корня к медовым концам" },
+            { cat: "nails" as const, img: asset("/photos/nails.jpg"), alt: "Два флакона лака и апельсиновая палочка на тарелке" },
           ].map((card, i) => (
             <Rise key={card.cat + i} delay={i * 80} className="overflow-hidden rounded-3xl border border-line bg-surface">
               <a href="#prices" onClick={() => setCat(card.cat)} className="grid sm:grid-cols-5">
