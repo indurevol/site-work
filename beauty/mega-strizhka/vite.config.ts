@@ -148,7 +148,7 @@ function authPopupPlugin(): Plugin {
 export default defineConfig(({ command, isPreview }) => {
   const pages = process.env.GITHUB_PAGES === "1";
   return {
-  base: pages ? "/site-work/" : "/",
+  base: pages ? "/site-work/beauty/mega-strizhka/" : "/",
   server: {
     host: "0.0.0.0",
     port: 8080,

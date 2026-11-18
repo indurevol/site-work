@@ -32,14 +32,56 @@ jobs:
         env:
           GITHUB_PAGES: "1"
         run: npx vite build
-      - name: Pages fallback
-        working-directory: beauty/mega-strizhka
+      - name: Put the site on its own path
         run: |
-          cp dist/client/index.html dist/client/404.html
-          touch dist/client/.nojekyll
+          rm -rf site
+          mkdir -p site/beauty/mega-strizhka
+          cp -a beauty/mega-strizhka/dist/client/. site/beauty/mega-strizhka/
+          cp site/beauty/mega-strizhka/index.html site/beauty/mega-strizhka/404.html
+          python3 - <<'PY'
+          import html, json
+          from pathlib import Path
+          data = json.loads(Path("catalog.json").read_text())
+          rows = []
+          for project in data["projects"]:
+              title = html.escape(project["title"])
+              city = html.escape(project.get("city") or "")
+              url = html.escape(project.get("url") or "#")
+              rows.append(f'<li><a href="{url}">{title}</a><span>{city}</span></li>')
+          page = """<!doctype html>
+          <html lang="ru">
+          <head>
+            <meta charset="utf-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1" />
+            <title>site-work</title>
+            <style>
+              body { margin: 0; font: 16px/1.5 sans-serif; background: #f3eee6; color: #241c18; }
+              main { max-width: 40rem; margin: 0 auto; padding: 3rem 1.25rem; }
+              h1 { font-weight: 500; font-size: 2.5rem; margin: 0 0 0.5rem; }
+              p { color: #6d625b; }
+              ul { list-style: none; padding: 0; }
+              li { display: flex; justify-content: space-between; gap: 1rem; padding: 0.85rem 0; border-top: 1px solid #e4d9cc; }
+              a { color: #8e4128; }
+            </style>
+          </head>
+          <body>
+            <main>
+              <h1>site-work</h1>
+              <p>Проекты. У каждого своя ссылка.</p>
+              <ul>
+          """ + "\n".join(rows) + """
+              </ul>
+            </main>
+          </body>
+          </html>
+          """
+          Path("site/index.html").write_text(page)
+          Path("site/404.html").write_text(page)
+          Path("site/.nojekyll").touch()
+          PY
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: beauty/mega-strizhka/dist/client
+          path: site
 
   deploy:
     needs: build
