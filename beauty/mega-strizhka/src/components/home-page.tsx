@@ -281,7 +281,7 @@ export function HomePage() {
         </div>
       </section>
 
-      <section id="reviews" className="scroll-mt-24 mx-auto max-w-6xl px-4 py-16 md:px-6">
+      <section id="reviews" className="scroll-mt-24 mx-auto max-w-6xl px-4 py-10 md:px-6 md:py-12">
         <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
           <h2 className="font-display text-4xl md:text-5xl">Отзывы гостей</h2>
           <div className="flex gap-2 overflow-x-auto">
@@ -295,50 +295,46 @@ export function HomePage() {
             ))}
           </div>
         </div>
-        <div className="mt-6">
-          <div className="mb-3 flex justify-end gap-2">
-            <button
-              type="button"
-              aria-label="Предыдущие отзывы"
-              className="inline-flex size-11 items-center justify-center rounded-full border border-line bg-surface"
-              onClick={() => reviewsRef.current?.scrollBy({ left: -reviewsRef.current.clientWidth * 0.85, behavior: "smooth" })}
-            >
-              <ChevronLeft className="size-5" />
-            </button>
-            <button
-              type="button"
-              aria-label="Следующие отзывы"
-              className="inline-flex size-11 items-center justify-center rounded-full border border-line bg-surface"
-              onClick={() => reviewsRef.current?.scrollBy({ left: reviewsRef.current.clientWidth * 0.85, behavior: "smooth" })}
-            >
-              <ChevronRight className="size-5" />
-            </button>
-          </div>
+        <div className="relative mt-5">
+          <button
+            type="button"
+            aria-label="Предыдущие отзывы"
+            className="absolute top-1/2 left-0 z-10 inline-flex size-11 -translate-y-1/2 items-center justify-center rounded-full border border-line bg-surface shadow-sm"
+            onClick={() => reviewsRef.current?.scrollBy({ left: -reviewsRef.current.clientWidth * 0.8, behavior: "smooth" })}
+          >
+            <ChevronLeft className="size-5" />
+          </button>
+          <button
+            type="button"
+            aria-label="Следующие отзывы"
+            className="absolute top-1/2 right-0 z-10 inline-flex size-11 -translate-y-1/2 items-center justify-center rounded-full border border-line bg-surface shadow-sm"
+            onClick={() => reviewsRef.current?.scrollBy({ left: reviewsRef.current.clientWidth * 0.8, behavior: "smooth" })}
+          >
+            <ChevronRight className="size-5" />
+          </button>
           <div
             ref={reviewsRef}
-            className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            className="flex h-40 snap-x snap-mandatory gap-3 overflow-x-auto px-12 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
             {visibleReviews.map((r) => (
-              <figure key={r.id} className="w-[86%] shrink-0 snap-start rounded-3xl border border-line bg-surface p-5 sm:w-[48%] lg:w-[32%]">
+              <figure key={r.id} className="flex h-40 w-72 shrink-0 snap-start flex-col rounded-2xl border border-line bg-surface px-4 py-3 sm:w-80">
                 <Stars />
-                <blockquote className="mt-3 text-base leading-7">{r.text}</blockquote>
-                <figcaption className="mt-4 text-sm text-muted">
+                <blockquote className="mt-2 line-clamp-3 text-sm leading-5">{r.text}</blockquote>
+                <figcaption className="mt-auto truncate text-xs text-muted">
                   {r.author}
-                  {r.master ? ` · мастер ${r.master}` : ""} · {shownBranches.find((b) => b.id === r.branchId)?.address} · {r.source}
+                  {r.master ? ` · ${r.master}` : ""} · {r.source}
                 </figcaption>
               </figure>
             ))}
             {publishedGuest.map((r) => (
-              <figure key={r.id} className="w-[86%] shrink-0 snap-start rounded-3xl border border-line bg-surface p-5 sm:w-[48%] lg:w-[32%]">
+              <figure key={r.id} className="flex h-40 w-72 shrink-0 snap-start flex-col rounded-2xl border border-line bg-surface px-4 py-3 sm:w-80">
                 <Stars value={r.stars} />
-                <blockquote className="mt-3 leading-7">{r.text}</blockquote>
-                <figcaption className="mt-4 text-sm text-muted">
-                  {r.author} · {shownBranches.find((b) => b.id === r.branchId)?.address} · с сайта
-                </figcaption>
+                <blockquote className="mt-2 line-clamp-3 text-sm leading-5">{r.text}</blockquote>
+                <figcaption className="mt-auto truncate text-xs text-muted">{r.author} · с сайта</figcaption>
               </figure>
             ))}
             {visibleReviews.length + publishedGuest.length === 0 && (
-              <p className="text-sm text-muted">По этому салону отзывов пока нет. Посмотрите «Все» или карточку в 2ГИС.</p>
+              <p className="self-center text-sm text-muted">По этому салону отзывов пока нет. Посмотрите «Все» или карточку в 2ГИС.</p>
             )}
           </div>
         </div>
