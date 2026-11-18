@@ -65,7 +65,7 @@ export function BookingDialog() {
   function submit() {
     const digits = phone.replace(/\D/g, "");
     if (name.trim().length < 2) return setError("Как к вам обращаться?");
-    if (digits.length < 10) return setError("Телефон нужен полностью, чтобы перезвонить.");
+    if (digits.length < 10) return setError("Телефон нужен полностью.");
     const booking: Booking = {
       id: `b-${Date.now()}`,
       name: name.trim(),
@@ -81,7 +81,7 @@ export function BookingDialog() {
     };
     addBooking(booking);
     setDone(booking);
-    toast("Заявку приняли. Перезвоним и подтвердим время");
+    toast("Это заглушка: заявка никуда не отправлена");
   }
 
   const today = new Date().toISOString().slice(0, 10);
@@ -94,8 +94,8 @@ export function BookingDialog() {
           <div className="flex items-start justify-between gap-4">
             <div>
               <Dialog.Title className="font-display text-3xl leading-none">Заявка в салон</Dialog.Title>
-              <Dialog.Description className="mt-2 text-sm text-muted">
-                Администратор перезвонит и подтвердит время.
+              <Dialog.Description className="mt-2 text-sm leading-6 text-muted">
+                Это заглушка. Заявка остаётся только в этом браузере и не уходит в салон, на почту или в YClients.
               </Dialog.Description>
             </div>
             <Dialog.Close className="inline-flex size-11 items-center justify-center rounded-full hover:bg-sand" aria-label="Закрыть">
@@ -105,10 +105,10 @@ export function BookingDialog() {
 
           {done ? (
             <div className="mt-6 rounded-3xl bg-sand p-5">
-              <p className="font-display text-2xl">Приняли, {done.name.split(" ")[0]}</p>
+              <p className="font-display text-2xl">Заявка не отправлена</p>
               <p className="mt-2 text-sm leading-6">
-                {done.service}. {branches.find((b) => b.id === done.branchId)?.address}. {done.date} в {done.time}.
-                Мастер: {done.master}. Мы перезвоним и подтвердим запись.
+                Это заглушка. {done.service}, {branches.find((b) => b.id === done.branchId)?.address}, {done.date} в {done.time}.
+                Салон эту заявку не получит. Запишитесь по телефону или в YClients.
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
                 <Button onClick={close}>Хорошо</Button>
