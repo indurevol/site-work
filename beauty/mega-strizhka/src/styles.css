@@ -77,6 +77,17 @@
   }
 }
 
+@keyframes bar-glow {
+  0%, 42% { box-shadow: 0 0 0 2px #ff6a1a; }
+  50%, 100% { box-shadow: 0 0 0 0 transparent; }
+}
+.bar-alt {
+  animation: bar-glow 3.2s ease-in-out infinite;
+}
+.bar-alt-late {
+  animation: bar-glow 3.2s ease-in-out infinite;
+  animation-delay: 1.6s;
+}
 @keyframes cta-pop {
   0%,
   100% {
@@ -98,7 +109,9 @@
   .rise-in,
   .soft-in,
   .cta-pop,
-  .cta-pop::after {
+  .cta-pop::after,
+  .bar-alt,
+  .bar-alt-late {
     opacity: 1;
     transform: none;
     animation: none;

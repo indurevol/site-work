@@ -45,7 +45,7 @@ export function Shell({ children }: { children: ReactNode }) {
             <span className="font-brand text-[1.35rem] leading-none font-extrabold tracking-tight sm:text-2xl">
               <span className="text-copper">МЕГА</span>стрижка
             </span>
-            <span className="mt-1 block text-xs text-muted">салоны в Перми</span>
+            <span className="mt-1 block text-xs text-muted">Сеть салонов в Перми</span>
           </Link>
           <nav className="ml-6 hidden items-center gap-1 lg:flex">
             <a href={`${import.meta.env.BASE_URL}#services`} className="rounded-full px-3 py-2 text-sm text-ink hover:bg-sand">
@@ -153,12 +153,12 @@ export function Shell({ children }: { children: ReactNode }) {
           <div className="mx-auto flex max-w-lg gap-2">
             <a
               href={`tel:${contacts.phoneTel}`}
-              className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-full border border-line bg-surface px-3 text-sm font-semibold"
+              className="bar-alt inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-full border border-line bg-surface px-3 text-sm font-semibold"
             >
               <Phone className="size-4 text-copper" />
               Позвонить
             </a>
-            <Button className="cta-pop min-h-12 flex-[1.4] text-base" onClick={() => openBooking()}>
+            <Button className="bar-alt-late cta-pop min-h-12 flex-[1.4] text-base" onClick={() => openBooking()}>
               Записаться
             </Button>
           </div>

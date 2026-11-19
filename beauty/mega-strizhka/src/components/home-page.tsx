@@ -105,29 +105,14 @@ export function HomePage() {
 
   return (
     <div>
-      <section className="mx-auto grid max-w-6xl items-center gap-10 px-4 py-12 md:grid-cols-12 md:px-6 md:py-16">
+      <section className="mx-auto grid max-w-6xl items-center gap-6 px-4 py-6 md:grid-cols-12 md:px-6 md:py-14">
         <div className="soft-in md:col-span-6">
-          <p className="text-sm font-semibold tracking-wide text-copper-deep">Сеть из {shownBranches.length} салонов</p>
-          <h1 className="mt-4 font-brand text-[2.15rem] leading-[1.05] font-extrabold tracking-tight sm:text-5xl md:text-6xl">
+          <h1 className="font-brand text-[2.15rem] leading-[1.05] font-extrabold tracking-tight sm:text-5xl md:text-6xl">
             Стрижка и цвет
             <span className="mt-2 block text-[1.35rem] leading-tight font-bold text-copper sm:text-3xl">Просто профессионально</span>
           </h1>
-          <p className="mt-5 max-w-md text-base leading-7 text-muted">
+          <p className="mt-4 max-w-md text-base leading-7 text-muted">
             Ежедневно {contacts.hours.replace("Ежедневно ", "")}. Короткая стрижка от 300 ₽.
-          </p>
-          <div className="mt-7 flex flex-wrap gap-3">
-            <Button className="cta-pop min-h-12 px-6 text-base" onClick={() => openBooking()}>
-              Записаться
-            </Button>
-            <a href="#prices" className="inline-flex min-h-11 items-center rounded-full border border-line bg-surface px-5 text-sm font-semibold">
-              Смотреть цены
-            </a>
-          </div>
-          <p className="mt-4 text-sm text-muted">
-            Или сразу{" "}
-            <a className="underline decoration-line underline-offset-4 hover:text-ink" href={contacts.yclients} target="_blank" rel="noreferrer">
-              записаться в YClients
-            </a>
           </p>
         </div>
         <div className="soft-in md:col-span-6" style={{ animationDelay: "120ms" }}>
