@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Eye, EyeOff, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -11,7 +11,7 @@ import {
   type PriceCategory,
 } from "@/data/salon";
 import { displayPrice, isBranchOpen, useSalon, type BookingStatus } from "@/lib/salon-store";
-import { mergeBranches, mergeFaqs, mergeMasters, mergePrices, mergePromos, mergeReviews } from "@/lib/catalog";
+import { mergeBranches, mergeFaqs, mergeMasters, mergePrices, mergePromos, mergeReviews, mergeServices } from "@/lib/catalog";
 import { Button, fieldClass } from "@/components/ui";
 import { cn } from "@/lib/cn";
 
@@ -20,6 +20,7 @@ const sections = [
   ["bookings", "Заявки"],
   ["reviews", "Отзывы"],
   ["branches", "Филиалы"],
+  ["services", "Услуги"],
   ["prices", "Прайс"],
   ["promos", "Акции"],
   ["masters", "Мастера"],
@@ -80,6 +81,12 @@ function AdminPage() {
   const deletedMasterIds = useSalon((s) => s.deletedMasterIds);
   const deletedReviewIds = useSalon((s) => s.deletedReviewIds);
   const deletedFaqIds = useSalon((s) => s.deletedFaqIds);
+  const extraServices = useSalon((s) => s.extraServices);
+  const serviceEdits = useSalon((s) => s.serviceEdits);
+  const hiddenServiceIds = useSalon((s) => s.hiddenServiceIds);
+  const deletedServiceIds = useSalon((s) => s.deletedServiceIds);
+  const addService = useSalon((s) => s.addService);
+  const toggleService = useSalon((s) => s.toggleService);
   const removeCard = useSalon((s) => s.removeCard);
   const siteInfo = useSalon((s) => s.siteInfo);
   const editMap = useSalon((s) => s.editMap);
@@ -101,6 +108,7 @@ function AdminPage() {
 
   const branchList = mergeBranches(branchEdits, extraBranches, hiddenBranchIds, true, deletedBranchIds);
   const priceList = mergePrices(priceEdits, extraPrices, priceOverrides, hiddenPriceIds, true, deletedPriceIds);
+  const serviceList = mergeServices(serviceEdits, extraServices, hiddenServiceIds, true, deletedServiceIds);
   const promoList = mergePromos(promoEdits, extraPromos, [], undefined, deletedPromoIds);
   const masterList = mergeMasters(masterEdits, extraMasters, hiddenMasterIds, true, deletedMasterIds);
   const reviewList = mergeReviews(reviewEdits, deletedReviewIds);
@@ -266,8 +274,14 @@ function AdminPage() {
                   const hidden = hiddenReviewIds.includes(r.id);
                   return (
                     <li key={r.id} className="grid gap-2 rounded-2xl border border-line px-3 py-3">
-                      <input className={fieldClass} defaultValue={r.author} key={`${r.id}-author-${r.author}`} onBlur={(e) => editMap("reviewEdits", r.id, { author: e.target.value })} />
-                      <textarea className={`${fieldClass} min-h-20 py-3`} defaultValue={r.text} key={`${r.id}-text-${r.text}`} onBlur={(e) => editMap("reviewEdits", r.id, { text: e.target.value })} />
+                      <DraftRow values={{ author: r.author, text: r.text }} onSave={(d) => editMap("reviewEdits", r.id, d)}>
+                        {(draft, setField) => (
+                          <>
+                            <input className={fieldClass} value={draft.author} onChange={(e) => setField("author", e.target.value)} aria-label="Имя" />
+                            <textarea className={`${fieldClass} min-h-20 py-3`} value={draft.text} onChange={(e) => setField("text", e.target.value)} aria-label="Текст" />
+                          </>
+                        )}
+                      </DraftRow>
                       <RowActions hidden={hidden} onHide={() => toggleHiddenReview(r.id)} onDelete={() => removeCard("review", r.id)} />
                     </li>
                   );
@@ -302,15 +316,24 @@ function AdminPage() {
                   };
                   return (
                     <li key={b.id} className="grid gap-2 rounded-3xl border border-line p-4">
-                      <div className="grid gap-2 sm:grid-cols-2">
-                        <input className={fieldClass} defaultValue={b.title} key={`${b.id}-title`} onBlur={(e) => save({ title: e.target.value })} aria-label="Название" />
-                        <input className={fieldClass} defaultValue={b.address} key={`${b.id}-address`} onBlur={(e) => save({ address: e.target.value })} aria-label="Адрес" />
-                        <input className={fieldClass} defaultValue={b.district} key={`${b.id}-district`} onBlur={(e) => save({ district: e.target.value })} aria-label="Район" />
-                        <input className={fieldClass} defaultValue={b.note} key={`${b.id}-note`} onBlur={(e) => save({ note: e.target.value })} aria-label="Пометка" />
-                        <input className={fieldClass} defaultValue={String(b.rating)} key={`${b.id}-rating`} onBlur={(e) => save({ rating: Number(e.target.value.replace(",", ".")) || 0 })} aria-label="Оценка" />
-                        <input className={fieldClass} defaultValue={String(b.marks)} key={`${b.id}-marks`} onBlur={(e) => save({ marks: Number(e.target.value) || 0 })} aria-label="Число оценок" />
-                      </div>
-                      <input className={fieldClass} defaultValue={b.map} key={`${b.id}-map`} onBlur={(e) => save({ map: e.target.value })} aria-label="Ссылка на карту" />
+                      <DraftRow
+                        values={{ title: b.title, address: b.address, district: b.district, note: b.note, rating: String(b.rating), marks: String(b.marks), map: b.map }}
+                        onSave={(d) => save({ title: d.title, address: d.address, district: d.district, note: d.note, rating: Number(d.rating.replace(",", ".")) || 0, marks: Number(d.marks) || 0, map: d.map })}
+                      >
+                        {(draft, setField) => (
+                          <>
+                            <div className="grid gap-2 sm:grid-cols-2">
+                              <input className={fieldClass} value={draft.title} onChange={(e) => setField("title", e.target.value)} aria-label="Название" />
+                              <input className={fieldClass} value={draft.address} onChange={(e) => setField("address", e.target.value)} aria-label="Адрес" />
+                              <input className={fieldClass} value={draft.district} onChange={(e) => setField("district", e.target.value)} aria-label="Район" />
+                              <input className={fieldClass} value={draft.note} onChange={(e) => setField("note", e.target.value)} aria-label="Пометка" />
+                              <input className={fieldClass} value={draft.rating} onChange={(e) => setField("rating", e.target.value)} aria-label="Оценка" />
+                              <input className={fieldClass} value={draft.marks} onChange={(e) => setField("marks", e.target.value)} aria-label="Число оценок" />
+                            </div>
+                            <input className={fieldClass} value={draft.map} onChange={(e) => setField("map", e.target.value)} aria-label="Ссылка на карту" />
+                          </>
+                        )}
+                      </DraftRow>
                       <div className="flex items-center justify-between gap-2">
                         <button className={cn("min-h-11 rounded-full px-4 text-sm font-semibold", open ? "bg-copper text-ink" : "bg-sand")} onClick={() => toggleBranch(b.id)}>
                           {open ? "Запись открыта" : "Запись закрыта"}
@@ -324,11 +347,46 @@ function AdminPage() {
             </section>
           )}
 
+          {section === "services" && (
+            <section>
+              <h2 className="font-display text-3xl leading-tight sm:text-4xl">Услуги</h2>
+              <p className="mt-2 text-sm text-muted">Общие названия. Под ними в прайсе лежат конкретные позиции.</p>
+              <ServiceForm
+                onAdd={(draft) => {
+                  addService({ id: `s-${Date.now()}`, ...draft });
+                  toast("Услуга добавлена");
+                }}
+              />
+              <ul className="mt-5 space-y-3">
+                {serviceList.map((item) => {
+                  const hidden = hiddenServiceIds.includes(item.id);
+                  return (
+                    <li key={item.id} className="rounded-2xl border border-line p-3">
+                      <div className="mb-2 flex items-center justify-between gap-2">
+                        <p className="text-sm text-muted">{hidden ? "Скрыта" : "На сайте"}</p>
+                        <RowActions hidden={hidden} onHide={() => toggleService(item.id)} onDelete={() => removeCard("service", item.id)} />
+                      </div>
+                      <DraftRow values={{ label: item.label, lead: item.lead }} onSave={(d) => editMap("serviceEdits", item.id, d)}>
+                        {(draft, setField) => (
+                          <div className="grid gap-2">
+                            <input className={fieldClass} value={draft.label} onChange={(e) => setField("label", e.target.value)} aria-label="Название услуги" />
+                            <input className={fieldClass} value={draft.lead} onChange={(e) => setField("lead", e.target.value)} aria-label="Коротко" />
+                          </div>
+                        )}
+                      </DraftRow>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          )}
+
           {section === "prices" && (
             <section>
               <h2 className="font-display text-3xl leading-tight sm:text-4xl">Прайс</h2>
               <p className="mt-2 text-sm text-muted">Название, цена и новая строка сразу видны на сайте.</p>
               <PriceForm
+                services={serviceList.filter((s) => !hiddenServiceIds.includes(s.id))}
                 onAdd={(draft) =>
                   addPriceItem({ id: `p-${Date.now()}`, ...draft })
                 }
@@ -348,24 +406,27 @@ function AdminPage() {
                   };
                   return (
                     <li key={item.id} className="grid min-w-0 gap-2 rounded-2xl border border-line p-3">
-                      <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_9rem]">
-                        <input className={fieldClass} defaultValue={item.name} key={`${item.id}-name`} onBlur={(e) => save({ name: e.target.value })} aria-label="Услуга" />
-                        <input
-                          className={fieldClass}
-                          defaultValue={displayPrice(priceOverrides, item.id, item.price)}
-                          key={`${item.id}-price`}
-                          onBlur={(e) => save({ price: e.target.value })}
-                          aria-label="Цена"
-                        />
-                      </div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        {(Object.keys(categoryMeta) as PriceCategory[]).map((cat) => (
-                          <button key={cat} className={cn("min-h-11 rounded-full px-3 text-sm", item.category === cat ? "bg-copper text-ink" : "bg-sand")} onClick={() => save({ category: cat })}>
-                            {categoryMeta[cat].label}
-                          </button>
-                        ))}
-                        <RowActions hidden={hidden} onHide={() => togglePrice(item.id)} onDelete={() => removeCard("price", item.id)} />
-                      </div>
+                      <DraftRow
+                        values={{ name: item.name, price: displayPrice(priceOverrides, item.id, item.price), category: item.category }}
+                        onSave={(d) => save({ name: d.name, price: d.price, category: d.category })}
+                      >
+                        {(draft, setField) => (
+                          <>
+                            <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_9rem]">
+                              <input className={fieldClass} value={draft.name} onChange={(e) => setField("name", e.target.value)} aria-label="Услуга" />
+                              <input className={fieldClass} value={draft.price} onChange={(e) => setField("price", e.target.value)} aria-label="Цена" />
+                            </div>
+                            <div className="flex flex-wrap items-center gap-2">
+                              {serviceList.filter((s) => !hiddenServiceIds.includes(s.id)).map((cat) => (
+                                <button key={cat.id} type="button" className={cn("min-h-11 rounded-full px-3 text-sm", draft.category === cat.id ? "bg-copper text-ink" : "bg-sand")} onClick={() => setField("category", cat.id)}>
+                                  {cat.label}
+                                </button>
+                              ))}
+                            </div>
+                          </>
+                        )}
+                      </DraftRow>
+                      <RowActions hidden={hidden} onHide={() => togglePrice(item.id)} onDelete={() => removeCard("price", item.id)} />
                     </li>
                   );
                 })}
@@ -385,11 +446,17 @@ function AdminPage() {
                   };
                   return (
                   <li key={p.id} className="rounded-3xl border border-line p-4">
-                    <div className="flex items-center gap-2">
-                      <input className={fieldClass} defaultValue={p.title} key={`${p.id}-title`} onBlur={(e) => save({ title: e.target.value })} aria-label="Название акции" />
+                    <div className="mb-2 flex justify-end">
                       <RowActions hidden={promosOn[p.id] === false} onHide={() => togglePromo(p.id)} onDelete={() => removeCard("promo", p.id)} />
                     </div>
-                    <textarea className={`${fieldClass} mt-2 min-h-20 py-3`} defaultValue={p.text} key={`${p.id}-text`} onBlur={(e) => save({ text: e.target.value })} aria-label="Текст акции" />
+                    <DraftRow values={{ title: p.title, text: p.text }} onSave={(d) => save(d)}>
+                      {(draft, setField) => (
+                        <>
+                          <input className={fieldClass} value={draft.title} onChange={(e) => setField("title", e.target.value)} aria-label="Название акции" />
+                          <textarea className={`${fieldClass} min-h-20 py-3`} value={draft.text} onChange={(e) => setField("text", e.target.value)} aria-label="Текст акции" />
+                        </>
+                      )}
+                    </DraftRow>
                   </li>
                   );
                 })}
@@ -457,9 +524,15 @@ function AdminPage() {
                   };
                   return (
                     <li key={m.id} className="grid gap-2 rounded-3xl border border-line p-4">
-                      <input className={fieldClass} defaultValue={m.name} key={`${m.id}-name`} onBlur={(e) => save({ name: e.target.value })} aria-label="Имя" />
-                      <input className={fieldClass} defaultValue={m.role} key={`${m.id}-role`} onBlur={(e) => save({ role: e.target.value })} aria-label="Роль" />
-                      <textarea className={`${fieldClass} min-h-20 py-3`} defaultValue={m.note} key={`${m.id}-note`} onBlur={(e) => save({ note: e.target.value })} aria-label="Заметка" />
+                      <DraftRow values={{ name: m.name, role: m.role, note: m.note }} onSave={(d) => save(d)}>
+                        {(draft, setField) => (
+                          <>
+                            <input className={fieldClass} value={draft.name} onChange={(e) => setField("name", e.target.value)} aria-label="Имя" />
+                            <input className={fieldClass} value={draft.role} onChange={(e) => setField("role", e.target.value)} aria-label="Роль" />
+                            <textarea className={`${fieldClass} min-h-20 py-3`} value={draft.note} onChange={(e) => setField("note", e.target.value)} aria-label="Заметка" />
+                          </>
+                        )}
+                      </DraftRow>
                       <p className="text-sm text-muted">
                         {m.branches.map((id) => branchList.find((b) => b.id === id)?.address).filter(Boolean).join(" · ")}
                       </p>
@@ -475,11 +548,17 @@ function AdminPage() {
             <section>
               <h2 className="font-display text-3xl leading-tight sm:text-4xl">Тексты</h2>
               <p className="mt-2 text-sm text-muted">Телефоны, часы, ссылка записи и вопросы.</p>
-              <div className="mt-5 grid gap-2">
-                <input className={fieldClass} placeholder="Основной телефон" defaultValue={siteInfo.phone} onBlur={(e) => setSiteInfo({ phone: e.target.value })} />
-                <input className={fieldClass} placeholder="Второй телефон" defaultValue={siteInfo.phoneAlt} onBlur={(e) => setSiteInfo({ phoneAlt: e.target.value })} />
-                <input className={fieldClass} placeholder="Часы работы" defaultValue={siteInfo.hours} onBlur={(e) => setSiteInfo({ hours: e.target.value })} />
-                <input className={fieldClass} placeholder="Ссылка YClients" defaultValue={siteInfo.yclients} onBlur={(e) => setSiteInfo({ yclients: e.target.value })} />
+              <div className="mt-5">
+                <DraftRow values={{ phone: siteInfo.phone, phoneAlt: siteInfo.phoneAlt, hours: siteInfo.hours, yclients: siteInfo.yclients }} onSave={(d) => setSiteInfo(d)}>
+                  {(draft, setField) => (
+                    <div className="grid gap-2">
+                      <input className={fieldClass} placeholder="Основной телефон" value={draft.phone} onChange={(e) => setField("phone", e.target.value)} />
+                      <input className={fieldClass} placeholder="Второй телефон" value={draft.phoneAlt} onChange={(e) => setField("phoneAlt", e.target.value)} />
+                      <input className={fieldClass} placeholder="Часы работы" value={draft.hours} onChange={(e) => setField("hours", e.target.value)} />
+                      <input className={fieldClass} placeholder="Ссылка YClients" value={draft.yclients} onChange={(e) => setField("yclients", e.target.value)} />
+                    </div>
+                  )}
+                </DraftRow>
               </div>
               <FaqForm onAdd={(draft) => addFaqItem({ id: `faq-${Date.now()}`, ...draft })} />
               <ul className="mt-5 space-y-3">
@@ -491,8 +570,14 @@ function AdminPage() {
                   };
                   return (
                     <li key={item.id} className="grid gap-2 rounded-3xl border border-line p-4">
-                      <input className={fieldClass} defaultValue={item.q} key={`${item.id}-q`} onBlur={(e) => save({ q: e.target.value })} aria-label="Вопрос" />
-                      <textarea className={`${fieldClass} min-h-20 py-3`} defaultValue={item.a} key={`${item.id}-a`} onBlur={(e) => save({ a: e.target.value })} aria-label="Ответ" />
+                      <DraftRow values={{ q: item.q, a: item.a }} onSave={(d) => save(d)}>
+                        {(draft, setField) => (
+                          <>
+                            <input className={fieldClass} value={draft.q} onChange={(e) => setField("q", e.target.value)} aria-label="Вопрос" />
+                            <textarea className={`${fieldClass} min-h-20 py-3`} value={draft.a} onChange={(e) => setField("a", e.target.value)} aria-label="Ответ" />
+                          </>
+                        )}
+                      </DraftRow>
                       <RowActions hidden={hidden} onHide={() => toggleFaq(item.id)} onDelete={() => removeCard("faq", item.id)} />
                     </li>
                   );
@@ -550,6 +635,58 @@ function Stat({ n, label }: { n: string; label: string }) {
       <p className="font-display text-4xl text-copper">{n}</p>
       <p className="text-sm text-muted">{label}</p>
     </div>
+  );
+}
+
+
+function DraftRow({
+  values,
+  onSave,
+  children,
+}: {
+  values: Record<string, string>;
+  onSave: (next: Record<string, string>) => void;
+  children: (draft: Record<string, string>, setField: (key: string, value: string) => void) => ReactNode;
+}) {
+  const [draft, setDraft] = useState(values);
+  const [base, setBase] = useState(values);
+  const stamp = JSON.stringify(values);
+  useEffect(() => {
+    setDraft(values);
+    setBase(values);
+  }, [stamp]);
+  const dirty = JSON.stringify(draft) !== JSON.stringify(base);
+  return (
+    <div className="grid gap-2">
+      {children(draft, (key, value) => setDraft((current) => ({ ...current, [key]: value })))}
+      {dirty && (
+        <div className="flex flex-wrap gap-2">
+          <Button type="button" onClick={() => { onSave(draft); setBase(draft); }}>Сохранить</Button>
+          <Button type="button" variant="line" onClick={() => setDraft(base)}>Отмена</Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ServiceForm({ onAdd }: { onAdd: (draft: { label: string; lead: string }) => void }) {
+  const [label, setLabel] = useState("");
+  const [lead, setLead] = useState("");
+  return (
+    <form
+      className="mt-5 grid gap-2 rounded-3xl border border-line p-4"
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (label.trim().length < 2) return;
+        onAdd({ label: label.trim(), lead: lead.trim() });
+        setLabel("");
+        setLead("");
+      }}
+    >
+      <input className={fieldClass} value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Название услуги" />
+      <input className={fieldClass} value={lead} onChange={(e) => setLead(e.target.value)} placeholder="Коротко, одной фразой" />
+      <Button type="submit">Добавить услугу</Button>
+    </form>
   );
 }
 
@@ -619,10 +756,10 @@ function BranchForm({ onAdd }: { onAdd: (draft: { title: string; address: string
   );
 }
 
-function PriceForm({ onAdd }: { onAdd: (draft: { name: string; price: string; category: PriceCategory }) => void }) {
+function PriceForm({ services, onAdd }: { services: { id: string; label: string }[]; onAdd: (draft: { name: string; price: string; category: string }) => void }) {
   const [name, setName] = useState("");
   const [price, setPriceValue] = useState("");
-  const [category, setCategory] = useState<PriceCategory>("cut");
+  const [category, setCategory] = useState(services[0]?.id ?? "cut");
   return (
     <form
       className="mt-5 grid gap-2 rounded-3xl border border-line p-4"
@@ -640,9 +777,9 @@ function PriceForm({ onAdd }: { onAdd: (draft: { name: string; price: string; ca
         <Button type="submit">Добавить</Button>
       </div>
       <div className="flex flex-wrap gap-2">
-        {(Object.keys(categoryMeta) as PriceCategory[]).map((cat) => (
-          <button key={cat} type="button" className={cn("min-h-11 rounded-full px-3 text-sm", category === cat ? "bg-copper text-ink" : "bg-sand")} onClick={() => setCategory(cat)}>
-            {categoryMeta[cat].label}
+        {services.map((cat) => (
+          <button key={cat.id} type="button" className={cn("min-h-11 rounded-full px-3 text-sm", category === cat.id ? "bg-copper text-ink" : "bg-sand")} onClick={() => setCategory(cat.id)}>
+            {cat.label}
           </button>
         ))}
       </div>

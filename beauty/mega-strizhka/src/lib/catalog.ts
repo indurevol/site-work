@@ -17,7 +17,8 @@ import {
   type PriceItem,
   type Review,
 } from "@/data/salon";
-import type { EditMap, ExtraBranch, ExtraFaq, ExtraPrice, ExtraPromo, SiteInfo } from "@/lib/salon-api";
+import { categoryMeta } from "@/data/salon";
+import type { EditMap, ExtraBranch, ExtraFaq, ExtraPrice, ExtraPromo, ExtraService, SiteInfo } from "@/lib/salon-api";
 
 const emptySite: SiteInfo = { phone: "", phoneAlt: "", hours: "", yclients: "" };
 
@@ -85,6 +86,20 @@ export function mergePrices(
   const all = [...base, ...added];
   const visible = includeHidden ? all : all.filter((item) => !hidden.includes(item.id));
   return keep(visible, deleted);
+}
+
+
+export function mergeServices(
+  edits: EditMap,
+  extra: ExtraService[],
+  hidden: string[],
+  includeHidden = false,
+  deleted: string[] = [],
+) {
+  const base = Object.entries(categoryMeta).map(([id, meta]) => ({ id, label: meta.label, lead: meta.lead }));
+  const alive = [...base, ...extra].filter((s) => !deleted.includes(s.id));
+  const merged = alive.map((s) => ({ ...s, ...(edits[s.id] as Partial<ExtraService> | undefined) }));
+  return includeHidden ? merged : merged.filter((s) => !hidden.includes(s.id));
 }
 
 export function mergePromos(

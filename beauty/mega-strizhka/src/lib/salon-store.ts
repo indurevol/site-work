@@ -11,6 +11,7 @@ import {
   type ExtraBranch,
   type ExtraFaq,
   type ExtraPrice,
+  type ExtraService,
   type ExtraPromo,
   type SiteInfo,
 } from "@/lib/salon-api";
@@ -58,6 +59,10 @@ type Persisted = {
   hiddenBranchIds: string[];
   priceEdits: ContentState["priceEdits"];
   extraPrices: ExtraPrice[];
+  extraServices: ExtraService[];
+  serviceEdits: ContentState["serviceEdits"];
+  hiddenServiceIds: string[];
+  deletedServiceIds: string[];
   promoEdits: ContentState["promoEdits"];
   extraPromos: ExtraPromo[];
   masterEdits: ContentState["masterEdits"];
@@ -95,15 +100,17 @@ type State = Persisted & {
   addMaster: (master: Master) => void;
   toggleMaster: (id: string) => void;
   connectAdmin: () => Promise<boolean>;
-  editMap: (key: "branchEdits" | "priceEdits" | "promoEdits" | "masterEdits" | "reviewEdits" | "faqEdits", id: string, patch: Record<string, string | number | string[]>) => void;
+  editMap: (key: "branchEdits" | "priceEdits" | "promoEdits" | "masterEdits" | "reviewEdits" | "faqEdits" | "serviceEdits", id: string, patch: Record<string, string | number | string[]>) => void;
   addBranch: (branch: ExtraBranch) => void;
   toggleBranchHidden: (id: string) => void;
   addPriceItem: (item: ExtraPrice) => void;
+  addService: (item: ExtraService) => void;
+  toggleService: (id: string) => void;
   addPromoItem: (item: ExtraPromo) => void;
   addFaqItem: (item: ExtraFaq) => void;
   toggleFaq: (id: string) => void;
   setSiteInfo: (patch: Partial<SiteInfo>) => void;
-  removeCard: (kind: "branch" | "price" | "promo" | "master" | "review" | "faq" | "guest" | "booking", id: string) => void;
+  removeCard: (kind: "branch" | "price" | "promo" | "master" | "review" | "faq" | "guest" | "booking" | "service", id: string) => void;
 };
 
 const KEY = "mega-strizhka-demo";
@@ -156,6 +163,10 @@ function initialPersisted(): Persisted {
     hiddenBranchIds: [],
     priceEdits: {},
     extraPrices: [],
+    extraServices: [],
+    serviceEdits: {},
+    hiddenServiceIds: [],
+    deletedServiceIds: [],
     promoEdits: {},
     extraPromos: [],
     masterEdits: {},
@@ -197,6 +208,10 @@ function readPersisted(): Persisted | null {
       hiddenBranchIds: Array.isArray(data.hiddenBranchIds) ? data.hiddenBranchIds : [],
       priceEdits: data.priceEdits ?? {},
       extraPrices: Array.isArray(data.extraPrices) ? data.extraPrices : [],
+      extraServices: Array.isArray(data.extraServices) ? data.extraServices : [],
+      serviceEdits: data.serviceEdits ?? {},
+      hiddenServiceIds: Array.isArray(data.hiddenServiceIds) ? data.hiddenServiceIds : [],
+      deletedServiceIds: Array.isArray(data.deletedServiceIds) ? data.deletedServiceIds : [],
       promoEdits: data.promoEdits ?? {},
       extraPromos: Array.isArray(data.extraPromos) ? data.extraPromos : [],
       masterEdits: data.masterEdits ?? {},
@@ -233,6 +248,10 @@ function contentOf(state: State): ContentState {
     hiddenBranchIds: state.hiddenBranchIds,
     priceEdits: state.priceEdits,
     extraPrices: state.extraPrices,
+    extraServices: state.extraServices,
+    serviceEdits: state.serviceEdits,
+    hiddenServiceIds: state.hiddenServiceIds,
+    deletedServiceIds: state.deletedServiceIds,
     promoEdits: state.promoEdits,
     extraPromos: state.extraPromos,
     masterEdits: state.masterEdits,
@@ -267,6 +286,10 @@ function save(state: State) {
     hiddenBranchIds: state.hiddenBranchIds,
     priceEdits: state.priceEdits,
     extraPrices: state.extraPrices,
+    extraServices: state.extraServices,
+    serviceEdits: state.serviceEdits,
+    hiddenServiceIds: state.hiddenServiceIds,
+    deletedServiceIds: state.deletedServiceIds,
     promoEdits: state.promoEdits,
     extraPromos: state.extraPromos,
     masterEdits: state.masterEdits,
@@ -417,6 +440,15 @@ export const useSalon = create<State>((set, get) => ({
     set({ extraPrices: [item, ...get().extraPrices.filter((p) => p.id !== item.id)] });
     save(get());
   },
+  addService: (item) => {
+    set({ extraServices: [item, ...get().extraServices.filter((s) => s.id !== item.id)] });
+    save(get());
+  },
+  toggleService: (id) => {
+    const has = get().hiddenServiceIds.includes(id);
+    set({ hiddenServiceIds: has ? get().hiddenServiceIds.filter((x) => x !== id) : [...get().hiddenServiceIds, id] });
+    save(get());
+  },
   addPromoItem: (item) => {
     set({
       extraPromos: [item, ...get().extraPromos.filter((p) => p.id !== item.id)],
@@ -443,6 +475,11 @@ export const useSalon = create<State>((set, get) => ({
       set({
         extraBranches: get().extraBranches.filter((b) => b.id !== id),
         deletedBranchIds: add(get().deletedBranchIds),
+      });
+    } else if (kind === "service") {
+      set({
+        extraServices: get().extraServices.filter((s) => s.id !== id),
+        deletedServiceIds: add(get().deletedServiceIds),
       });
     } else if (kind === "price") {
       set({

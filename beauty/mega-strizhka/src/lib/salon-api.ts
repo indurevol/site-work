@@ -50,6 +50,7 @@ export type ExtraBranch = {
 };
 
 export type ExtraPrice = { id: string; name: string; price: string; category: string };
+export type ExtraService = { id: string; label: string; lead: string };
 export type ExtraPromo = { id: string; title: string; text: string };
 export type ExtraFaq = { id: string; q: string; a: string };
 export type EditMap = Record<string, Record<string, string | number | string[]>>;
@@ -69,6 +70,10 @@ export type ContentState = {
   hiddenBranchIds: string[];
   priceEdits: EditMap;
   extraPrices: ExtraPrice[];
+  extraServices: ExtraService[];
+  serviceEdits: EditMap;
+  hiddenServiceIds: string[];
+  deletedServiceIds: string[];
   promoEdits: EditMap;
   extraPromos: ExtraPromo[];
   masterEdits: EditMap;

@@ -87,7 +87,7 @@ export const branches: Branch[] = [
 
 export const totalMarks = branches.reduce((sum, b) => sum + b.marks, 0);
 
-export type PriceCategory = "cut" | "color" | "complex" | "nails";
+export type PriceCategory = string;
 
 export const categoryMeta: Record<
   PriceCategory,
@@ -95,7 +95,7 @@ export const categoryMeta: Record<
 > = {
   cut: {
     label: "Стрижки",
-    lead: "Короткая стрижка — от 300 ₽. Модельная уже с другим ценником: не прячем вилку.",
+    lead: "Короткая стрижка — от 300 ₽.",
   },
   color: {
     label: "Окрашивание",
@@ -120,7 +120,6 @@ export type PriceItem = {
 
 /** Ориентир по открытому прайсу 2ГИС, филиал Юрша, 9. Карточка обновлялась 18 ноября 2026. Не оферта. */
 export const prices: PriceItem[] = [
-  { id: "c1", category: "cut", name: "Стрижка наголо", price: "300 ₽" },
   { id: "c2", category: "cut", name: "Стрижка чёлки", price: "250–300 ₽" },
   { id: "c3", category: "cut", name: "Спортивная стрижка", price: "700 ₽" },
   { id: "c4", category: "cut", name: "Спортивная стрижка с мытьём", price: "800 ₽" },
@@ -130,6 +129,7 @@ export const prices: PriceItem[] = [
   { id: "c8", category: "cut", name: "Женская модельная с мытьём", price: "850–1 200 ₽" },
   { id: "c9", category: "cut", name: "Детская стрижка до 7 лет", price: "700 ₽" },
   { id: "c10", category: "cut", name: "Подравнивание кончиков", price: "550–700 ₽" },
+  { id: "c1", category: "cut", name: "Стрижка наголо", price: "300 ₽" },
   { id: "o1", category: "color", name: "В один тон, короткие", price: "1 800–2 700 ₽" },
   { id: "o2", category: "color", name: "В один тон, средние", price: "2 400–3 300 ₽" },
   { id: "o3", category: "color", name: "В один тон, длинные", price: "2 900–4 000 ₽" },
@@ -455,6 +455,10 @@ export const generalChecklist = [
   {
     title: "Фото услуг одной серией",
     text: "Каждая услуга — своё фото, но один стиль: свет, поверхность, цвет бренда. Стрижки — ножницы, расчёска, тарелка. Соседние карточки не делят один кадр. Тон позитивный.",
+  },
+  {
+    title: "Услуги отдельно от позиций",
+    text: "В админке можно добавить общее название услуги, а под ним — позиции прайса. «Наголо» не ставить первой строкой. Под «Цены» не писать оговорку про филиал и «не оферта». Фразу «от 300 ₽» не продолжать объяснением. Правки карточек сохраняются только кнопкой «Сохранить», рядом «Отмена».",
   },
   {
     title: "Первый экран кончается фото",

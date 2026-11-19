@@ -10,11 +10,18 @@ import {
 } from "@/data/salon";
 import { displayPrice, isBranchOpen, useSalon } from "@/lib/salon-store";
 import { postReview } from "@/lib/salon-api";
-import { mergeBranches, mergeFaqs, mergeMasters, mergePrices, mergePromos, mergeReviews, siteContacts } from "@/lib/catalog";
+import { mergeBranches, mergeFaqs, mergeMasters, mergePrices, mergePromos, mergeReviews, mergeServices, siteContacts } from "@/lib/catalog";
 import { Button, Field, Rise, Stars, fieldClass } from "@/components/ui";
 import { asset, cn } from "@/lib/cn";
 
-const cats: PriceCategory[] = ["cut", "color", "complex", "nails"];
+
+
+const servicePhotos: Record<string, { img: string; alt: string }> = {
+  cut: { img: asset("/photos/cut.jpg"), alt: "Ножницы, расчёска и тарелка" },
+  color: { img: asset("/photos/color.jpg"), alt: "Пряди пшеничного, медового и каштанового цвета" },
+  complex: { img: asset("/photos/complex.jpg"), alt: "Локон с переходом от тёмного корня к медовым концам" },
+  nails: { img: asset("/photos/nails.jpg"), alt: "Два флакона лака и апельсиновая палочка на тарелке" },
+};
 
 export function HomePage() {
   const openBooking = useSalon((s) => s.openBooking);
@@ -40,6 +47,10 @@ export function HomePage() {
   const hiddenFaqIds = useSalon((s) => s.hiddenFaqIds);
   const deletedBranchIds = useSalon((s) => s.deletedBranchIds);
   const deletedPriceIds = useSalon((s) => s.deletedPriceIds);
+  const extraServices = useSalon((s) => s.extraServices);
+  const serviceEdits = useSalon((s) => s.serviceEdits);
+  const hiddenServiceIds = useSalon((s) => s.hiddenServiceIds);
+  const deletedServiceIds = useSalon((s) => s.deletedServiceIds);
   const deletedPromoIds = useSalon((s) => s.deletedPromoIds);
   const deletedMasterIds = useSalon((s) => s.deletedMasterIds);
   const deletedReviewIds = useSalon((s) => s.deletedReviewIds);
@@ -52,10 +63,11 @@ export function HomePage() {
   const shownReviews = mergeReviews(reviewEdits, deletedReviewIds);
   const shownFaqs = mergeFaqs(faqEdits, extraFaqs, hiddenFaqIds, false, deletedFaqIds);
   const priceList = mergePrices(priceEdits, extraPrices, priceOverrides, hiddenPriceIds, false, deletedPriceIds);
+  const services = mergeServices(serviceEdits, extraServices, hiddenServiceIds, false, deletedServiceIds);
   const activePromos = mergePromos(promoEdits, extraPromos, [], promosOn, deletedPromoIds);
   const marksTotal = shownBranches.reduce((sum, b) => sum + b.marks, 0);
 
-  const [cat, setCat] = useState<PriceCategory>("cut");
+  const [cat, setCat] = useState("cut");
   const [query, setQuery] = useState("");
   const reviewsRef = useRef<HTMLDivElement>(null);
   const [branchFilter, setBranchFilter] = useState("all");
@@ -132,27 +144,25 @@ export function HomePage() {
 
       <section id="services" className="scroll-mt-24 mx-auto max-w-6xl px-4 py-10 md:px-6 md:py-14">
         <Rise>
-          <h2 className="font-display text-4xl md:text-5xl">Четыре повода зайти</h2>
+          <h2 className="font-display text-4xl md:text-5xl">Повода зайти</h2>
           <p className="mt-3 max-w-xl text-muted">Стрижка, цвет, сложное окрашивание и маникюр.</p>
         </Rise>
         <div className="mt-8 grid gap-4 md:grid-cols-2">
-          {[
-            { cat: "cut" as const, img: asset("/photos/cut.jpg"), alt: "Ножницы, расчёска и тарелка" },
-            { cat: "color" as const, img: asset("/photos/color.jpg"), alt: "Пряди пшеничного, медового и каштанового цвета" },
-            { cat: "complex" as const, img: asset("/photos/complex.jpg"), alt: "Локон с переходом от тёмного корня к медовым концам" },
-            { cat: "nails" as const, img: asset("/photos/nails.jpg"), alt: "Два флакона лака и апельсиновая палочка на тарелке" },
-          ].map((card, i) => (
-            <Rise key={card.cat + i} delay={i * 80} className="overflow-hidden rounded-3xl border border-line bg-surface">
-              <a href="#prices" onClick={() => setCat(card.cat)} className="grid sm:grid-cols-5">
-                <img src={card.img} alt={card.alt} className="aspect-[4/3] h-full w-full object-cover sm:col-span-2" />
+          {services.map((card, i) => {
+            const photo = servicePhotos[card.id] ?? servicePhotos.cut;
+            return (
+            <Rise key={card.id} delay={i * 80} className="overflow-hidden rounded-3xl border border-line bg-surface">
+              <a href="#prices" onClick={() => setCat(card.id)} className="grid sm:grid-cols-5">
+                <img src={photo.img} alt={photo.alt} className="aspect-[4/3] h-full w-full object-cover sm:col-span-2" />
                 <div className="p-5 sm:col-span-3">
-                  <h3 className="font-display text-3xl">{categoryMeta[card.cat].label}</h3>
-                  <p className="mt-2 text-sm leading-6 text-muted">{categoryMeta[card.cat].lead}</p>
+                  <h3 className="font-display text-3xl">{card.label}</h3>
+                  <p className="mt-2 text-sm leading-6 text-muted">{card.lead}</p>
                   <p className="mt-4 text-sm font-semibold text-copper-deep">К ценам</p>
                 </div>
               </a>
             </Rise>
-          ))}
+            );
+          })}
         </div>
       </section>
 
@@ -177,9 +187,6 @@ export function HomePage() {
           <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
             <div>
               <h2 className="font-display text-4xl md:text-5xl">Цены</h2>
-              <p className="mt-3 max-w-xl text-sm leading-6 text-muted">
-                По прайсу салона на Юрша, 9. Точную стоимость подтвердит администратор. Не оферта.
-              </p>
             </div>
             <input
               value={query}
@@ -190,20 +197,20 @@ export function HomePage() {
             />
           </div>
           <div className="mt-6 flex gap-2 overflow-x-auto pb-1">
-            {cats.map((id) => (
+            {services.map((item) => (
               <button
-                key={id}
-                onClick={() => setCat(id)}
+                key={item.id}
+                onClick={() => setCat(item.id)}
                 className={cn(
                   "min-h-11 shrink-0 rounded-full px-4 text-sm font-semibold",
-                  cat === id ? "bg-ink text-surface" : "bg-surface text-ink",
+                  cat === item.id ? "bg-ink text-surface" : "bg-surface text-ink",
                 )}
               >
-                {categoryMeta[id].label}
+                {item.label}
               </button>
             ))}
           </div>
-          <p className="mt-4 text-sm text-muted">{categoryMeta[cat].lead}</p>
+          <p className="mt-4 text-sm text-muted">{services.find((s) => s.id === cat)?.lead}</p>
           <ul className="mt-4 divide-y divide-line rounded-3xl border border-line bg-surface">
             {list.map((item) => (
               <li key={item.id} className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
