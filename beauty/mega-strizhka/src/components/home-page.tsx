@@ -16,6 +16,12 @@ import { asset, cn } from "@/lib/cn";
 
 
 
+function reasonsTitle(count: number) {
+  const n = count % 100;
+  const word = n >= 11 && n <= 14 ? "поводов" : count % 10 === 1 ? "повод" : count % 10 >= 2 && count % 10 <= 4 ? "повода" : "поводов";
+  return `${count} ${word} зайти`;
+}
+
 const servicePhotos: Record<string, { img: string; alt: string }> = {
   cut: { img: asset("/photos/cut.jpg"), alt: "Ножницы, расчёска и тарелка" },
   color: { img: asset("/photos/color.jpg"), alt: "Пряди пшеничного, медового и каштанового цвета" },
@@ -144,7 +150,7 @@ export function HomePage() {
 
       <section id="services" className="scroll-mt-24 mx-auto max-w-6xl px-4 py-10 md:px-6 md:py-14">
         <Rise>
-          <h2 className="font-display text-4xl md:text-5xl">Повода зайти</h2>
+          <h2 className="font-display text-4xl md:text-5xl">{reasonsTitle(services.length)}</h2>
           <p className="mt-3 max-w-xl text-muted">Стрижка, цвет, сложное окрашивание и маникюр.</p>
         </Rise>
         <div className="mt-8 grid gap-4 md:grid-cols-2">
