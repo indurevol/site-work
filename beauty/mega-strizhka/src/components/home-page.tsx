@@ -16,18 +16,19 @@ import { asset, cn } from "@/lib/cn";
 
 
 
-function reasonsTitle(count: number) {
-  const n = count % 100;
-  const word = n >= 11 && n <= 14 ? "поводов" : count % 10 === 1 ? "повод" : count % 10 >= 2 && count % 10 <= 4 ? "повода" : "поводов";
-  return `${count} ${word} зайти`;
-}
-
 const servicePhotos: Record<string, { img: string; alt: string }> = {
   cut: { img: asset("/photos/cut.jpg"), alt: "Ножницы, расчёска и тарелка" },
   color: { img: asset("/photos/color.jpg"), alt: "Пряди пшеничного, медового и каштанового цвета" },
   complex: { img: asset("/photos/complex.jpg"), alt: "Локон с переходом от тёмного корня к медовым концам" },
   nails: { img: asset("/photos/nails.jpg"), alt: "Два флакона лака и апельсиновая палочка на тарелке" },
 };
+
+const reasons = [
+  { id: "cut", label: categoryMeta.cut.label, lead: categoryMeta.cut.lead, ...servicePhotos.cut },
+  { id: "color", label: categoryMeta.color.label, lead: categoryMeta.color.lead, ...servicePhotos.color },
+  { id: "complex", label: categoryMeta.complex.label, lead: categoryMeta.complex.lead, ...servicePhotos.complex },
+  { id: "nails", label: categoryMeta.nails.label, lead: categoryMeta.nails.lead, ...servicePhotos.nails },
+];
 
 export function HomePage() {
   const openBooking = useSalon((s) => s.openBooking);
@@ -150,16 +151,14 @@ export function HomePage() {
 
       <section id="services" className="scroll-mt-24 mx-auto max-w-6xl px-4 py-10 md:px-6 md:py-14">
         <Rise>
-          <h2 className="font-display text-4xl md:text-5xl">{reasonsTitle(services.length)}</h2>
+          <h2 className="font-display text-4xl md:text-5xl">4 повода зайти</h2>
           <p className="mt-3 max-w-xl text-muted">Стрижка, цвет, сложное окрашивание и маникюр.</p>
         </Rise>
         <div className="mt-8 grid gap-4 md:grid-cols-2">
-          {services.map((card, i) => {
-            const photo = servicePhotos[card.id] ?? servicePhotos.cut;
-            return (
+          {reasons.map((card, i) => (
             <Rise key={card.id} delay={i * 80} className="overflow-hidden rounded-3xl border border-line bg-surface">
               <a href="#prices" onClick={() => setCat(card.id)} className="grid sm:grid-cols-5">
-                <img src={photo.img} alt={photo.alt} className="aspect-[4/3] h-full w-full object-cover sm:col-span-2" />
+                <img src={card.img} alt={card.alt} className="aspect-[4/3] h-full w-full object-cover sm:col-span-2" />
                 <div className="p-5 sm:col-span-3">
                   <h3 className="font-display text-3xl">{card.label}</h3>
                   <p className="mt-2 text-sm leading-6 text-muted">{card.lead}</p>
@@ -167,8 +166,7 @@ export function HomePage() {
                 </div>
               </a>
             </Rise>
-            );
-          })}
+          ))}
         </div>
       </section>
 
